@@ -56,3 +56,10 @@ python3 tenis_app.py
 
 Appka se tě zeptá na parametry obou hráčů a kontext zápasu,
 a pak vrátí odhad v procentech pro oba hráče.
+## Automatický režim (stahování dat + odhady)
+
+Pokud nechceš ručně vyplňovat hráče a statistiky, použij automatický skript:
+
+```bash
+python3 auto_tennis_predictor.py "Novak Djokovic" "Carlos Alcaraz" --tour atp --surface Hard --years 2023 2024
+
