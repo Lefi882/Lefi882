@@ -56,27 +56,10 @@ python3 tenis_app.py
 
 Appka se tě zeptá na parametry obou hráčů a kontext zápasu,
 a pak vrátí odhad v procentech pro oba hráče.
-
-
 ## Automatický režim (stahování dat + odhady)
 
 Pokud nechceš ručně vyplňovat hráče a statistiky, použij automatický skript:
 
 ```bash
 python3 auto_tennis_predictor.py "Novak Djokovic" "Carlos Alcaraz" --tour atp --surface Hard --years 2023 2024
-```
 
-Co skript udělá automaticky:
-- stáhne historická data zápasů (ATP/WTA) z veřejného datasetu,
-- spočítá pro oba hráče formu, povrchový rating, ace-rate, return a pressure index,
-- vrátí odhad % výhry/prohry,
-- vrátí odhad celkového počtu gamů,
-- vrátí odhad es a dvojchyb pro oba hráče.
-
-Pozn.: jde o modelový odhad (ne garance), přesnost roste s lepším feature engineeringem a kalibrací.
-
-Pokud ti nejde stahování z internetu, můžeš dát lokální CSV:
-
-```bash
-python3 auto_tennis_predictor.py "Novak Djokovic" "Carlos Alcaraz" --surface Hard --csv-files sample_atp_matches.csv
-```
