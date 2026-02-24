@@ -1,0 +1,58 @@
+# Odhad pravděpodobnosti v tenise (výpočetní přístup)
+
+Tento mini-projekt ukazuje jednoduchý, praktický framework na odhad pravděpodobnosti výhry v tenisovém zápase.
+
+## Co sledovat (feature engineering)
+
+- **Síla hráče na konkrétním povrchu** (nejlépe surface ELO).
+- **Aktuální forma** (např. posledních 5–10 zápasů, váženě podle kvality soupeřů).
+- **Únava / zatížení** (délka minulých zápasů, počet setů, cestování, back-to-back dny).
+- **Servisní profil** (esa, % 1. servisu, body po 1./2. servisu).
+- **Return profil soupeře** (% vyhraných return pointů, break conversion).
+- **Kontext zápasu** (důležitost kola, tlak, typ turnaje).
+- **Podmínky** (počasí, indoor/outdoor, rychlost kurtu).
+
+## Jak to počítat
+
+V souboru `tenis_probability_model.py` je transparentní model:
+
+1. Spočte rozdíly hráč A vs hráč B ve featurách.
+2. Každý rozdíl vynásobí vahou.
+3. Sečte je do jednoho skóre.
+4. Skóre převede přes logistickou funkci na pravděpodobnost 0–1.
+
+To je výborný start. Jakmile budeš mít data, doporučení je:
+
+- nahradit ručně zadané váhy tréninkem (logistická regrese, gradient boosting),
+- použít **time-decay** (čerstvá data mají vyšší váhu),
+- model průběžně kalibrovat (Brier score, reliability curve),
+- netrénovat na „future leakage“ datech.
+
+## Spuštění
+
+```bash
+python3 tenis_probability_model.py
+```
+
+Ukázkový výstup:
+
+```text
+P(Hráč A vyhraje) = 0.700
+```
+
+## Poznámka k přesnosti
+
+Nejdůležitější je kvalita vstupních dat a validace na historických zápasech.
+I jednoduchý model může být velmi použitelný, pokud má dobře navržené feature a pravidelnou rekalibraci.
+
+
+## Interaktivní appka (2 hráči)
+
+Pokud chceš zadat vlastní zápas ručně (hráč 1 vs hráč 2), spusť:
+
+```bash
+python3 tenis_app.py
+```
+
+Appka se tě zeptá na parametry obou hráčů a kontext zápasu,
+a pak vrátí odhad v procentech pro oba hráče.
