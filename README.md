@@ -196,7 +196,7 @@ Pozn.: potřebuješ API klíč (`API_TENNIS_KEY` nebo `--api-key`).
 
 ## FINAL ACE APP (klikací GUI)
 
-Tohle je finální jednoduchá appka (klikací):
+Tohle je finální jednoduchá appka (klikací) s vylepšeným tmavým vzhledem a přehlednější kartou výsledku:
 
 ```bash
 python3 final_ace_app.py
