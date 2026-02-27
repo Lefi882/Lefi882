@@ -123,3 +123,43 @@ Skript:
 - pro každý zápas použije jen data dostupná před zápasem,
 - provede grid-search parametrů (váha server/return + surface multipliers),
 - vypíše MAE (průměrnou absolutní chybu v počtu es).
+
+
+Tip: můžeš zadat i zkrácené jméno (např. `Alcaraz`, `Medvedev`) a skript ho zkusí automaticky spárovat na plné jméno z datasetu.
+
+
+## Turnajová appka (výběr turnaje + hráčů)
+
+Pokud nechceš psát jména ručně, použij výběrovou appku:
+
+```bash
+python3 tournament_ace_app.py --csv-files sample_atp_matches.csv
+```
+
+Postup:
+1. vybereš turnaj (např. Dubai),
+2. vybereš hráče A ze seznamu,
+3. vybereš hráče B ze seznamu,
+4. appka vrátí odhad es pro oba.
+
+Turnaje mají vlastní `ace_boost` (např. Dubai je rychlejší hard), takže odhad reflektuje podmínky turnaje.
+
+
+Pozn.: přidané turnaje zahrnují i Mexiko (např. **Acapulco** / **Los Cabos**) a WTA turnaje (**Mérida Open Akron**, **Guadalajara Open**).
+
+Pro WTA lokální test můžeš použít:
+
+```bash
+python3 tournament_ace_app.py --csv-files sample_wta_matches.csv
+```
+
+### Mimo Python (varianta .exe pro Windows)
+
+Pokud nechceš spouštět `.py`, můžeš zabalit appku do `.exe`:
+
+```bash
+py -m pip install pyinstaller
+py -m PyInstaller --onefile tournament_ace_app.py
+```
+
+Pak spouštíš `dist\tournament_ace_app.exe` bez ruční práce s Python soubory.

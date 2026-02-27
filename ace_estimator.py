@@ -38,6 +38,31 @@ def safe_float(v: Optional[str], default: float = 0.0) -> float:
         return default
 
 
+
+
+def normalize_name(name: str) -> str:
+    return " ".join(name.lower().replace("-", " ").split())
+
+
+def name_matches(input_name: str, candidate_name: str) -> bool:
+    a = normalize_name(input_name)
+    b = normalize_name(candidate_name)
+    return a == b or a in b or b in a
+
+
+def resolve_player_name(rows: Iterable[Dict[str, str]], query: str) -> Optional[str]:
+    counts: Dict[str, int] = {}
+    for r in rows:
+        for key in ("winner_name", "loser_name"):
+            n = r.get(key)
+            if not n:
+                continue
+            if name_matches(query, n):
+                counts[n] = counts.get(n, 0) + 1
+    if not counts:
+        return None
+    return sorted(counts.items(), key=lambda x: x[1], reverse=True)[0][0]
+
 def fetch_year_matches(tour: str, year: int, use_cache: bool = True) -> List[Dict[str, str]]:
     CACHE_DIR.mkdir(exist_ok=True)
     cache_file = CACHE_DIR / f"{tour}_matches_{year}.csv"
@@ -168,8 +193,15 @@ def main() -> None:
     if not rows:
         raise SystemExit("Nepodařilo se načíst data. Použij --csv-files nebo zkontroluj internet.")
 
-    a = build_profile(args.player_a, rows, args.surface)
-    b = build_profile(args.player_b, rows, args.surface)
+    resolved_a = resolve_player_name(rows, args.player_a)
+    resolved_b = resolve_player_name(rows, args.player_b)
+    if not resolved_a:
+        raise SystemExit(f"Hráč '{args.player_a}' nebyl nalezen. Zkus celé jméno, např. 'Carlos Alcaraz'.")
+    if not resolved_b:
+        raise SystemExit(f"Hráč '{args.player_b}' nebyl nalezen. Zkus celé jméno, např. 'Daniil Medvedev'.")
+
+    a = build_profile(resolved_a, rows, args.surface)
+    b = build_profile(resolved_b, rows, args.surface)
 
     a_aces = estimate_aces(a, b, args.surface)
     b_aces = estimate_aces(b, a, args.surface)
