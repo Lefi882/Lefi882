@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Dict, List
 
 from ace_engine import load_rows, estimate_aces_for_match, ranked_player_pool
+from ace_engine import load_rows, estimate_aces_for_match
 
 
 @dataclass(frozen=True)
@@ -90,6 +91,12 @@ class App(tk.Tk):
         if len(names) < 20:
             # likely offline / blocked fetch => sample fallback already used by engine
             self.status_var.set("Pozn.: běží fallback data (málo hráčů). Zkus internet pro top 200.")
+            csv_files = ["sample_wta_matches.csv"] if t.tour == "wta" else ["sample_atp_matches.csv"]
+            rows = load_rows(t.tour, years=[2023, 2024, 2025, 2026], csv_files=csv_files)
+            self.rows_by_tour[t.tour] = rows
+
+        rows = self.rows_by_tour[t.tour]
+        names = sorted({r.get("winner_name") for r in rows if r.get("winner_name")} | {r.get("loser_name") for r in rows if r.get("loser_name")})
         self.players_list = names
         self.player_a_box["values"] = names
         self.player_b_box["values"] = names
@@ -98,6 +105,7 @@ class App(tk.Tk):
             self.player_a_var.set(names[0])
             self.player_b_var.set(names[1])
         self.status_var.set(f"Načteno {len(names)} hráčů (cíleno na top 200).")
+        self.status_var.set(f"Načteno {len(names)} hráčů.")
 
     def compute(self) -> None:
         t = self.selected_tournament()

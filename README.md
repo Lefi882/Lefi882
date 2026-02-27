@@ -214,3 +214,4 @@ Pokud nejde internet, spadne to na lokální sample data (pak uvidíš méně hr
 
 
 Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.
+Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.
