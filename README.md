@@ -197,6 +197,7 @@ Pozn.: potřebuješ API klíč (`API_TENNIS_KEY` nebo `--api-key`).
 ## FINAL ACE APP (klikací GUI)
 
 Tohle je finální jednoduchá appka (klikací) s vylepšeným tmavým vzhledem a přehlednější kartou výsledku:
+Tohle je finální jednoduchá appka (klikací):
 
 ```bash
 python3 final_ace_app.py
@@ -215,4 +216,6 @@ Nově appka při načtení hráčů cílí na **top 200** pool (podle recent zá
 Pokud nejde internet, spadne to na lokální sample data (pak uvidíš méně hráčů).
 
 
+Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.
+Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.
 Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.
