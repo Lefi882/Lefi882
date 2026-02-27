@@ -167,11 +167,46 @@ Pak spouštíš `dist\tournament_ace_app.exe` bez ruční práce s Python soubor
 
 ## Windows: jedno kliknutí přes BAT
 
-Pokud máš projekt uložený v:
+Spusť soubor `SPUSTIT_ESA.bat` (dvojklik) **ve stejné složce jako Python soubory**.
 
-`C:\Users\David\Desktop\Lefi882-main`
-
-spusť soubor `SPUSTIT_ESA.bat` (dvojklik). Ten sám:
-- přejde do správné složky,
+BAT teď funguje nezávisle na cestě (nepotřebuje pevnou adresu `C:\...`):
+- automaticky se přepne do složky, kde leží `.bat`,
+- zkontroluje, že tam je `tournament_ace_app.py`,
 - zeptá se, jestli chceš WTA nebo ATP,
-- spustí `tournament_ace_app.py` s odpovídajícím sample datasetem.
+- spustí výpočet a na konci vždy čeká na klávesu (okno se hned nezavře).
+
+
+## LIVE režim přes API (bez ručního výběru hráčů)
+
+Pokud chceš opravdu aktuální turnaj + aktuální zápasy (bez klikaní hráčů), použij:
+
+```bash
+python3 live_api_ace_runner.py --tournament merida --tour wta --date 2026-02-27 --api-key TVUJ_API_KLIC
+```
+
+Co to dělá:
+- stáhne aktuální zápasy turnaje z API,
+- k hráčům dohledá historické profily,
+- vrátí odhad es pro každý nalezený zápas.
+
+Pozn.: potřebuješ API klíč (`API_TENNIS_KEY` nebo `--api-key`).
+
+
+## FINAL ACE APP (klikací GUI)
+
+Tohle je finální jednoduchá appka (klikací):
+
+```bash
+python3 final_ace_app.py
+```
+
+Postup:
+1. vyber turnaj,
+2. klikni **Načti hráče pro turnaj**,
+3. vyber hráče A a B,
+4. klikni **VYPOČTI ESA**.
+
+Výstup obsahuje i interval nejistoty (80 %).
+
+
+Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.
