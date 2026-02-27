@@ -167,11 +167,10 @@ Pak spouštíš `dist\tournament_ace_app.exe` bez ruční práce s Python soubor
 
 ## Windows: jedno kliknutí přes BAT
 
-Pokud máš projekt uložený v:
+Spusť soubor `SPUSTIT_ESA.bat` (dvojklik) **ve stejné složce jako Python soubory**.
 
-`C:\Users\David\Desktop\Lefi882-main`
-
-spusť soubor `SPUSTIT_ESA.bat` (dvojklik). Ten sám:
-- přejde do správné složky,
+BAT teď funguje nezávisle na cestě (nepotřebuje pevnou adresu `C:\...`):
+- automaticky se přepne do složky, kde leží `.bat`,
+- zkontroluje, že tam je `tournament_ace_app.py`,
 - zeptá se, jestli chceš WTA nebo ATP,
-- spustí `tournament_ace_app.py` s odpovídajícím sample datasetem.
+- spustí výpočet a na konci vždy čeká na klávesu (okno se hned nezavře).
