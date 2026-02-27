@@ -7,6 +7,7 @@ from tkinter import ttk, messagebox
 from dataclasses import dataclass
 from typing import Dict, List
 
+from ace_engine import load_rows, estimate_aces_for_match, ranked_player_pool
 from ace_engine import load_rows, estimate_aces_for_match
 
 
@@ -81,6 +82,15 @@ class App(tk.Tk):
         self.update_idletasks()
 
         if t.tour not in self.rows_by_tour:
+            # Primary mode: fetch broad recent history to get a rich player pool.
+            rows = load_rows(t.tour, years=[2022, 2023, 2024, 2025, 2026], csv_files=[])
+            self.rows_by_tour[t.tour] = rows
+
+        rows = self.rows_by_tour[t.tour]
+        names = ranked_player_pool(rows, t.tour, limit=200)
+        if len(names) < 20:
+            # likely offline / blocked fetch => sample fallback already used by engine
+            self.status_var.set("Pozn.: běží fallback data (málo hráčů). Zkus internet pro top 200.")
             csv_files = ["sample_wta_matches.csv"] if t.tour == "wta" else ["sample_atp_matches.csv"]
             rows = load_rows(t.tour, years=[2023, 2024, 2025, 2026], csv_files=csv_files)
             self.rows_by_tour[t.tour] = rows
@@ -94,6 +104,7 @@ class App(tk.Tk):
         if len(names) >= 2:
             self.player_a_var.set(names[0])
             self.player_b_var.set(names[1])
+        self.status_var.set(f"Načteno {len(names)} hráčů (cíleno na top 200).")
         self.status_var.set(f"Načteno {len(names)} hráčů.")
 
     def compute(self) -> None:

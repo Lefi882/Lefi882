@@ -159,3 +159,33 @@ def estimate_aces_for_match(
 
     return round(a_aces, 1), round(b_aces, 1), (round(a_ci[0], 1), round(a_ci[1], 1)), (round(b_ci[0], 1), round(b_ci[1], 1))
 
+
+
+def ranked_player_pool(rows: List[Dict[str, str]], tour: str, limit: int = 200) -> List[str]:
+    """Build a practical top-player pool from loaded match data.
+
+    Score is based on match activity + wins, which keeps current top players near the top
+    when recent years are loaded.
+    """
+    stats: Dict[str, Dict[str, float]] = {}
+    for r in rows:
+        w = r.get("winner_name")
+        l = r.get("loser_name")
+        if w:
+            stats.setdefault(w, {"m": 0, "w": 0})
+            stats[w]["m"] += 1
+            stats[w]["w"] += 1
+        if l:
+            stats.setdefault(l, {"m": 0, "w": 0})
+            stats[l]["m"] += 1
+
+    scored = []
+    for name, d in stats.items():
+        matches = d["m"]
+        wins = d["w"]
+        win_rate = wins / matches if matches else 0.0
+        score = matches * 0.65 + wins * 0.35 + 10 * win_rate
+        scored.append((score, name))
+
+    scored.sort(reverse=True)
+    return [n for _, n in scored[:limit]]

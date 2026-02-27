@@ -209,4 +209,9 @@ Postup:
 Výstup obsahuje i interval nejistoty (80 %).
 
 
+Nově appka při načtení hráčů cílí na **top 200** pool (podle recent zápasové aktivity + výkonnosti) z načtených ATP/WTA dat.
+Pokud nejde internet, spadne to na lokální sample data (pak uvidíš méně hráčů).
+
+
+Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.
 Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.
