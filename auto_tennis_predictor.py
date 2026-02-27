@@ -200,8 +200,8 @@ def estimate_totals(p1: float, surface: str) -> float:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Automatický odhad tenisového zápasu")
-    parser.add_argument("player_a", help="Jméno hráče A, např. 'Novak Djokovic'")
-    parser.add_argument("player_b", help="Jméno hráče B, např. 'Carlos Alcaraz'")
+    parser.add_argument("player_a", nargs="?", help="Jméno hráče A, např. 'Novak Djokovic'")
+    parser.add_argument("player_b", nargs="?", help="Jméno hráče B, např. 'Carlos Alcaraz'")
     parser.add_argument("--tour", choices=["atp", "wta"], default="atp")
     parser.add_argument("--surface", choices=["Hard", "Clay", "Grass", "Carpet"], default="Hard")
     parser.add_argument("--years", nargs="+", type=int, default=[datetime.utcnow().year - 1, datetime.utcnow().year])
@@ -213,6 +213,15 @@ def main() -> None:
         help="Volitelné lokální CSV soubory se zápasy (když nechceš nebo nemůžeš stahovat data).",
     )
     args = parser.parse_args()
+
+
+    if not args.player_a:
+        args.player_a = input("Zadej hráče A: ").strip()
+    if not args.player_b:
+        args.player_b = input("Zadej hráče B: ").strip()
+
+    if not args.player_a or not args.player_b:
+        raise SystemExit("Musíš zadat oba hráče (A i B).")
 
     rows: List[Dict[str, str]] = []
     if args.csv_files:

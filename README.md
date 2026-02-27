@@ -56,10 +56,70 @@ python3 tenis_app.py
 
 Appka se tě zeptá na parametry obou hráčů a kontext zápasu,
 a pak vrátí odhad v procentech pro oba hráče.
+
+
 ## Automatický režim (stahování dat + odhady)
 
 Pokud nechceš ručně vyplňovat hráče a statistiky, použij automatický skript:
 
 ```bash
 python3 auto_tennis_predictor.py "Novak Djokovic" "Carlos Alcaraz" --tour atp --surface Hard --years 2023 2024
+```
 
+Co skript udělá automaticky:
+- stáhne historická data zápasů (ATP/WTA) z veřejného datasetu,
+- spočítá pro oba hráče formu, povrchový rating, ace-rate, return a pressure index,
+- vrátí odhad % výhry/prohry,
+- vrátí odhad celkového počtu gamů,
+- vrátí odhad es a dvojchyb pro oba hráče.
+
+Pozn.: jde o modelový odhad (ne garance), přesnost roste s lepším feature engineeringem a kalibrací.
+
+Pokud ti nejde stahování z internetu, můžeš dát lokální CSV:
+
+```bash
+python3 auto_tennis_predictor.py "Novak Djokovic" "Carlos Alcaraz" --surface Hard --csv-files sample_atp_matches.csv
+```
+
+
+### Ještě jednodušší použití (bez ELO vyplňování)
+
+Spusť jen:
+
+```bash
+python3 auto_tennis_predictor.py --surface Hard --csv-files sample_atp_matches.csv
+```
+
+Aplikace se tě pak zeptá pouze na jména 2 hráčů.
+
+
+## Odhad pouze počtu es (nová appka)
+
+Pokud chceš pouze odhad es (bez dalších metrik), použij:
+
+```bash
+python3 ace_estimator.py --surface Hard --csv-files sample_atp_matches.csv
+```
+
+Skript se zeptá jen na 2 jména hráčů a vrátí odhad počtu es pro oba.
+
+Můžeš také zadat jména rovnou:
+
+```bash
+python3 ace_estimator.py "Novak Djokovic" "Carlos Alcaraz" --surface Hard --csv-files sample_atp_matches.csv
+```
+
+
+## Backtest a doladění odhadu es (např. 50 zápasů)
+
+Ano, jde to: můžeš vzít historické zápasy a model kalibrovat, aby byl blízko realitě.
+
+```bash
+python3 ace_backtest.py --csv-files atp_matches_2024.csv --surface Hard --tests 50
+```
+
+Skript:
+- vezme náhodný vzorek zápasů (`--tests`, třeba 50),
+- pro každý zápas použije jen data dostupná před zápasem,
+- provede grid-search parametrů (váha server/return + surface multipliers),
+- vypíše MAE (průměrnou absolutní chybu v počtu es).
