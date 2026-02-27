@@ -2,6 +2,8 @@
 
 Tento mini-projekt ukazuje jednoduchý, praktický framework na odhad pravděpodobnosti výhry v tenisovém zápase.
 
+> Quick note: Projekt obsahuje i ace-only nástroje (CLI/GUI), pokud chceš řešit jen esa.
+
 ## Co sledovat (feature engineering)
 
 - **Síla hráče na konkrétním povrchu** (nejlépe surface ELO).
@@ -194,6 +196,7 @@ Pozn.: potřebuješ API klíč (`API_TENNIS_KEY` nebo `--api-key`).
 
 ## FINAL ACE APP (klikací GUI)
 
+Tohle je finální jednoduchá appka (klikací) s vylepšeným tmavým vzhledem a přehlednější kartou výsledku:
 Tohle je finální jednoduchá appka (klikací):
 
 ```bash
@@ -213,5 +216,6 @@ Nově appka při načtení hráčů cílí na **top 200** pool (podle recent zá
 Pokud nejde internet, spadne to na lokální sample data (pak uvidíš méně hráčů).
 
 
+Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.
 Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.
 Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.
