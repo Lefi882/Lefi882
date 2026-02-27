@@ -1,0 +1,7 @@
+tourney_date,surface,winner_name,loser_name,w_ace,w_df,w_svpt,w_1stWon,w_2ndWon,w_bpSaved,w_bpFaced,l_ace,l_df,l_svpt,l_1stWon,l_2ndWon,l_bpSaved,l_bpFaced
+20240226,Hard,Elena Rybakina,Aryna Sabalenka,9,3,76,41,17,5,8,7,4,74,36,16,4,9
+20240220,Hard,Coco Gauff,Jessica Pegula,8,2,70,37,15,4,7,5,3,72,34,16,5,9
+20240218,Hard,Aryna Sabalenka,Coco Gauff,11,4,78,42,18,6,9,6,3,73,34,15,4,8
+20240212,Hard,Jessica Pegula,Elena Rybakina,6,3,71,36,16,3,7,8,4,75,38,16,5,9
+20240128,Hard,Aryna Sabalenka,Elena Rybakina,10,5,80,43,17,7,10,9,3,77,39,17,6,10
+20240122,Hard,Coco Gauff,Aryna Sabalenka,7,4,74,38,16,5,8,8,6,79,39,16,5,11
