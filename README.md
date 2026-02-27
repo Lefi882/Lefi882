@@ -163,3 +163,15 @@ py -m PyInstaller --onefile tournament_ace_app.py
 ```
 
 Pak spouštíš `dist\tournament_ace_app.exe` bez ruční práce s Python soubory.
+
+
+## Windows: jedno kliknutí přes BAT
+
+Pokud máš projekt uložený v:
+
+`C:\Users\David\Desktop\Lefi882-main`
+
+spusť soubor `SPUSTIT_ESA.bat` (dvojklik). Ten sám:
+- přejde do správné složky,
+- zeptá se, jestli chceš WTA nebo ATP,
+- spustí `tournament_ace_app.py` s odpovídajícím sample datasetem.
