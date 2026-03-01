@@ -144,10 +144,10 @@ Postup:
 3. vybereš hráče B ze seznamu,
 4. appka vrátí odhad es pro oba.
 
-Turnaje mají vlastní `ace_boost` (např. Dubai je rychlejší hard), takže odhad reflektuje podmínky turnaje.
+Profily mají vlastní `ace_boost` pro HARD/ANTUKA, takže odhad reflektuje podmínky povrchu.
 
 
-Pozn.: přidané turnaje zahrnují i Mexiko (např. **Acapulco** / **Los Cabos**) a WTA turnaje (**Mérida Open Akron**, **Guadalajara Open**).
+Pozn.: aktuálně je výběr zjednodušený na obecné profily **HARD / ANTUKA** pro ATP i WTA (bez fixace na konkrétní už skončené turnaje).
 
 Pro WTA lokální test můžeš použít:
 

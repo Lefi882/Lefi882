@@ -19,19 +19,12 @@ class TournamentProfile:
 
 
 TOURNAMENTS = [
-    TournamentProfile("Mérida Open Akron", "wta", "Hard", 1.03),
-    TournamentProfile("Guadalajara Open", "wta", "Hard", 1.04),
-    TournamentProfile("Dubai", "atp", "Hard", 1.08),
-    TournamentProfile("Acapulco (Abierto Mexicano)", "atp", "Hard", 1.06),
-    TournamentProfile("Los Cabos", "atp", "Hard", 1.05),
-    TournamentProfile("Indian Wells", "atp", "Hard", 0.98),
-    TournamentProfile("Miami Open", "atp", "Hard", 1.01),
-    TournamentProfile("Madrid", "atp", "Clay", 0.90),
-    TournamentProfile("Rome", "atp", "Clay", 0.86),
-    TournamentProfile("Roland Garros", "atp", "Clay", 0.84),
-    TournamentProfile("Wimbledon", "atp", "Grass", 1.18),
-    TournamentProfile("US Open", "atp", "Hard", 1.02),
+    TournamentProfile("ATP Hard (obecný)", "atp", "Hard", 1.02),
+    TournamentProfile("ATP Clay / Antuka (obecný)", "atp", "Clay", 0.88),
+    TournamentProfile("WTA Hard (obecný)", "wta", "Hard", 1.00),
+    TournamentProfile("WTA Clay / Antuka (obecný)", "wta", "Clay", 0.90),
 ]
+
 
 
 class App(tk.Tk):
