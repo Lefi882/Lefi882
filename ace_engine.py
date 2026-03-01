@@ -5,6 +5,7 @@ Focuses on reusable data loading + model calculations so both CLI and GUI can us
 
 from __future__ import annotations
 
+import math
 import statistics
 from datetime import datetime
 from dataclasses import dataclass
@@ -259,3 +260,37 @@ def search_players(players: List[str], query: str, limit: int = 40) -> List[str]
     starts = [p for p in players if p.lower().startswith(q)]
     contains = [p for p in players if q in p.lower() and p not in starts]
     return (starts + contains)[:limit]
+
+
+
+def over_under_probabilities(expected_aces: float, lines: List[float]) -> Dict[float, Tuple[float, float]]:
+    """Return over/under probabilities for half-lines using a Poisson model."""
+    lam = max(0.05, float(expected_aces))
+
+    # Stable iterative Poisson pmf/cdf computation.
+    pmf = math.exp(-lam)  # P(X=0)
+    cdf = pmf
+    probs: Dict[int, float] = {0: pmf}
+    k = 0
+    target_k = max(20, int(max(lines) + 12)) if lines else 20
+    while k < target_k:
+        k += 1
+        pmf = pmf * lam / k
+        probs[k] = pmf
+        cdf += pmf
+
+    out: Dict[float, Tuple[float, float]] = {}
+    for line in lines:
+        threshold = int(math.floor(line))
+        under = sum(probs.get(i, 0.0) for i in range(threshold + 1))
+        under = max(0.0, min(1.0, under))
+        over = 1.0 - under
+        out[line] = (over, under)
+    return out
+
+
+def suggested_lines(expected_aces: float, count: int = 3) -> List[float]:
+    center = int(round(expected_aces))
+    base = max(0, center - 1)
+    lines = [base + i + 0.5 for i in range(count)]
+    return lines

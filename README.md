@@ -210,7 +210,7 @@ Postup:
 4. filtruj hráče přes pole Filtr A/B (rychlé hledání),
 5. klikni **VYPOČTI ESA**.
 
-Výstup obsahuje i interval nejistoty (80 %).
+Výstup obsahuje i interval nejistoty (80 %) a nově i O/U line pravděpodobnosti (např. 1.5, 2.5, 3.5) kolem očekávané hranice.
 
 Model nově silněji váží **H2H matchup** (recency-weighted), takže výrazné vzájemné rozdíly v esech mají větší dopad na predikci.
 

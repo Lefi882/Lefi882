@@ -14,6 +14,8 @@ from ace_engine import (
     load_rows,
     ranked_player_pool,
     search_players,
+    suggested_lines,
+    over_under_probabilities,
 )
 
 
@@ -207,10 +209,26 @@ class App(tk.Tk):
             messagebox.showerror("Chyba výpočtu", str(e))
             return
 
+        lines_a = suggested_lines(a_aces, count=3)
+        lines_b = suggested_lines(b_aces, count=3)
+        probs_a = over_under_probabilities(a_aces, lines_a)
+        probs_b = over_under_probabilities(b_aces, lines_b)
+
+        a_ou = "\n".join(
+            f"  O/U {line:.1f}: Over {probs_a[line][0]*100:.1f}% | Under {probs_a[line][1]*100:.1f}%"
+            for line in lines_a
+        )
+        b_ou = "\n".join(
+            f"  O/U {line:.1f}: Over {probs_b[line][0]*100:.1f}% | Under {probs_b[line][1]*100:.1f}%"
+            for line in lines_b
+        )
+
         self.result_var.set(
             f"Profil: {t.name} ({t.tour.upper()}, {t.surface})\n"
             f"{p1}: {a_aces} es  | interval 80%: {a_ci[0]} - {a_ci[1]}\n"
-            f"{p2}: {b_aces} es  | interval 80%: {b_ci[0]} - {b_ci[1]}"
+            f"{p2}: {b_aces} es  | interval 80%: {b_ci[0]} - {b_ci[1]}\n\n"
+            f"{p1} line probabilities:\n{a_ou}\n\n"
+            f"{p2} line probabilities:\n{b_ou}"
         )
         self.status_var.set("Výpočet hotov.")
 
