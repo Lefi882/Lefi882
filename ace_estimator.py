@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import csv
 import statistics
+import time
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
@@ -63,21 +64,30 @@ def resolve_player_name(rows: Iterable[Dict[str, str]], query: str) -> Optional[
         return None
     return sorted(counts.items(), key=lambda x: x[1], reverse=True)[0][0]
 
-def fetch_year_matches(tour: str, year: int, use_cache: bool = True) -> List[Dict[str, str]]:
+def fetch_year_matches(tour: str, year: int, use_cache: bool = True, max_cache_age_hours: int = 24) -> List[Dict[str, str]]:
     CACHE_DIR.mkdir(exist_ok=True)
     cache_file = CACHE_DIR / f"{tour}_matches_{year}.csv"
 
     content: Optional[str] = None
+    cache_fresh = False
     if use_cache and cache_file.exists():
-        content = cache_file.read_text(encoding="utf-8")
-    else:
+        age_sec = max(0.0, time.time() - cache_file.stat().st_mtime)
+        cache_fresh = age_sec <= max_cache_age_hours * 3600
+        if cache_fresh:
+            content = cache_file.read_text(encoding="utf-8")
+
+    if content is None:
         url = DATA_URL_TEMPLATE.format(tour=tour, year=year)
         try:
             with urlopen(url, timeout=20) as response:
                 content = response.read().decode("utf-8", errors="ignore")
         except URLError:
-            return []
-        if use_cache and content:
+            # network fallback to any cached version, even stale
+            if use_cache and cache_file.exists():
+                content = cache_file.read_text(encoding="utf-8")
+            else:
+                return []
+        if use_cache and content and (not cache_fresh or not cache_file.exists()):
             cache_file.write_text(content, encoding="utf-8")
 
     if not content:

@@ -1,13 +1,20 @@
-"""Final GUI app: choose tournament + players and click compute aces."""
+"""Final GUI app: choose profile + players and click compute aces."""
 
 from __future__ import annotations
 
 import tkinter as tk
 from dataclasses import dataclass
+from datetime import datetime
 from tkinter import messagebox, ttk
 from typing import Dict, List
 
-from ace_engine import estimate_aces_for_match, load_rows, ranked_player_pool
+from ace_engine import (
+    estimate_aces_for_match,
+    latest_data_date,
+    load_rows,
+    ranked_player_pool,
+    search_players,
+)
 
 
 @dataclass(frozen=True)
@@ -26,13 +33,12 @@ TOURNAMENTS = [
 ]
 
 
-
 class App(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("FINAL ACE APP")
-        self.geometry("860x560")
-        self.minsize(820, 520)
+        self.geometry("900x580")
+        self.minsize(860, 540)
         self.configure(bg="#0f172a")
 
         self._init_style()
@@ -42,8 +48,12 @@ class App(tk.Tk):
         self.tournament_var = tk.StringVar(value=TOURNAMENTS[0].name)
         self.player_a_var = tk.StringVar()
         self.player_b_var = tk.StringVar()
+        self.player_a_filter_var = tk.StringVar()
+        self.player_b_filter_var = tk.StringVar()
         self.status_var = tk.StringVar(value="Ready")
-        self.result_var = tk.StringVar(value="Vyber turnaj a hráče, pak klikni VYPOČTI ESA.")
+        self.result_var = tk.StringVar(value="Vyber profil, načti hráče a klikni VYPOČTI ESA.")
+
+        self.players_list: List[str] = []
 
         self._build_ui()
 
@@ -68,15 +78,14 @@ class App(tk.Tk):
         root.pack(fill="both", expand=True)
 
         ttk.Label(root, text="🎾 Final Ace App", style="Title.TLabel").pack(anchor="w")
-        ttk.Label(root, text="Výběr turnaje + top hráči + odhad počtu es", style="Sub.TLabel").pack(anchor="w", pady=(0, 12))
+        ttk.Label(root, text="Live-ish data + filtr hráčů + odhad počtu es", style="Sub.TLabel").pack(anchor="w", pady=(0, 12))
 
         card = ttk.Frame(root, style="Card.TFrame", padding=14)
         card.pack(fill="x")
-
         card.columnconfigure(0, weight=1)
         card.columnconfigure(1, weight=1)
 
-        ttk.Label(card, text="Turnaj", style="Field.TLabel").grid(row=0, column=0, sticky="w", pady=(0, 4), padx=(0, 8))
+        ttk.Label(card, text="Profil", style="Field.TLabel").grid(row=0, column=0, sticky="w", pady=(0, 4), padx=(0, 8))
         self.tournament_box = ttk.Combobox(
             card,
             textvariable=self.tournament_var,
@@ -85,27 +94,34 @@ class App(tk.Tk):
         )
         self.tournament_box.grid(row=1, column=0, columnspan=2, sticky="ew", padx=(0, 4))
 
-        self.load_btn = ttk.Button(card, text="1) Načti hráče pro turnaj", command=self.load_players, style="Accent.TButton")
+        self.load_btn = ttk.Button(card, text="1) Načti hráče (live data)", command=self.load_players, style="Accent.TButton")
         self.load_btn.grid(row=2, column=0, columnspan=2, sticky="ew", pady=10)
 
-        self.players_list: List[str] = []
+        ttk.Label(card, text="Filtr hráče A", style="Field.TLabel").grid(row=3, column=0, sticky="w", padx=(0, 8))
+        ttk.Label(card, text="Filtr hráče B", style="Field.TLabel").grid(row=3, column=1, sticky="w")
+
+        self.player_a_filter = ttk.Entry(card, textvariable=self.player_a_filter_var)
+        self.player_b_filter = ttk.Entry(card, textvariable=self.player_b_filter_var)
+        self.player_a_filter.grid(row=4, column=0, sticky="ew", padx=(0, 8), pady=(2, 6))
+        self.player_b_filter.grid(row=4, column=1, sticky="ew", pady=(2, 6))
+
+        ttk.Label(card, text="Hráč A", style="Field.TLabel").grid(row=5, column=0, sticky="w", padx=(0, 8))
+        ttk.Label(card, text="Hráč B", style="Field.TLabel").grid(row=5, column=1, sticky="w")
+
         self.player_a_box = ttk.Combobox(card, textvariable=self.player_a_var, values=self.players_list, state="readonly")
         self.player_b_box = ttk.Combobox(card, textvariable=self.player_b_var, values=self.players_list, state="readonly")
-
-        ttk.Label(card, text="Hráč A", style="Field.TLabel").grid(row=3, column=0, sticky="w", pady=(4, 4), padx=(0, 8))
-        ttk.Label(card, text="Hráč B", style="Field.TLabel").grid(row=3, column=1, sticky="w", pady=(4, 4))
-        self.player_a_box.grid(row=4, column=0, sticky="ew", padx=(0, 8))
-        self.player_b_box.grid(row=4, column=1, sticky="ew")
+        self.player_a_box.grid(row=6, column=0, sticky="ew", padx=(0, 8), pady=(2, 6))
+        self.player_b_box.grid(row=6, column=1, sticky="ew", pady=(2, 6))
 
         self.compute_btn = ttk.Button(card, text="2) VYPOČTI ESA", command=self.compute, style="Accent.TButton")
-        self.compute_btn.grid(row=5, column=0, columnspan=2, sticky="ew", pady=(12, 4))
+        self.compute_btn.grid(row=7, column=0, columnspan=2, sticky="ew", pady=(8, 4))
 
         result_card = ttk.Frame(root, style="Card.TFrame", padding=14)
         result_card.pack(fill="both", expand=True, pady=(12, 0))
         result_card.columnconfigure(0, weight=1)
 
         ttk.Label(result_card, text="Výsledek", style="Field.TLabel").grid(row=0, column=0, sticky="w")
-        ttk.Label(result_card, textvariable=self.result_var, justify="left", style="Result.TLabel", wraplength=780).grid(
+        ttk.Label(result_card, textvariable=self.result_var, justify="left", style="Result.TLabel", wraplength=820).grid(
             row=1,
             column=0,
             sticky="nw",
@@ -113,6 +129,21 @@ class App(tk.Tk):
         )
 
         ttk.Label(root, textvariable=self.status_var, style="Status.TLabel").pack(anchor="w", pady=(8, 0))
+
+        self.player_a_filter_var.trace_add("write", lambda *_: self._apply_filters())
+        self.player_b_filter_var.trace_add("write", lambda *_: self._apply_filters())
+
+    def _apply_filters(self) -> None:
+        if not self.players_list:
+            return
+        a_items = search_players(self.players_list, self.player_a_filter_var.get(), limit=60)
+        b_items = search_players(self.players_list, self.player_b_filter_var.get(), limit=60)
+        self.player_a_box["values"] = a_items
+        self.player_b_box["values"] = b_items
+        if a_items and self.player_a_var.get() not in a_items:
+            self.player_a_var.set(a_items[0])
+        if b_items and self.player_b_var.get() not in b_items:
+            self.player_b_var.set(b_items[0])
 
     def selected_tournament(self) -> TournamentProfile:
         for t in TOURNAMENTS:
@@ -125,14 +156,11 @@ class App(tk.Tk):
         self.status_var.set(f"Načítám data pro {t.name} ({t.tour.upper()})...")
         self.update_idletasks()
 
-        if t.tour not in self.rows_by_tour:
-            rows = load_rows(t.tour, years=[2022, 2023, 2024, 2025, 2026], csv_files=[])
-            self.rows_by_tour[t.tour] = rows
+        # always reload to get fresh data (cache in fetch has 24h freshness)
+        rows = load_rows(t.tour, years=[2023, 2024, 2025, 2026], csv_files=[])
+        self.rows_by_tour[t.tour] = rows
 
-        rows = self.rows_by_tour[t.tour]
         names = ranked_player_pool(rows, t.tour, limit=200)
-        if len(names) < 20:
-            self.status_var.set("Pozn.: běží fallback data (málo hráčů). Zkus internet pro top 200.")
         self.players_list = names
         self.player_a_box["values"] = names
         self.player_b_box["values"] = names
@@ -140,7 +168,22 @@ class App(tk.Tk):
         if len(names) >= 2:
             self.player_a_var.set(names[0])
             self.player_b_var.set(names[1])
-        self.status_var.set(f"Načteno {len(names)} hráčů (cíleno na top 200).")
+
+        newest = latest_data_date(rows)
+        if newest:
+            age_days = max(0, (datetime.utcnow() - newest).days)
+            fresh_info = f"Poslední zápas v datech: {newest.strftime('%Y-%m-%d')} (stáří {age_days} dnů)"
+            if age_days > 2:
+                fresh_info += " ⚠️"
+        else:
+            fresh_info = "Poslední zápas v datech: neznámé"
+
+        if len(names) < 20:
+            self.status_var.set(f"Načteno {len(names)} hráčů (fallback). {fresh_info}")
+        else:
+            self.status_var.set(f"Načteno {len(names)} aktivních hráčů. {fresh_info}")
+
+        self._apply_filters()
 
     def compute(self) -> None:
         t = self.selected_tournament()
@@ -155,7 +198,7 @@ class App(tk.Tk):
 
         rows = self.rows_by_tour.get(t.tour)
         if not rows:
-            messagebox.showerror("Chyba", "Nejdřív klikni 'Načti hráče pro turnaj'.")
+            messagebox.showerror("Chyba", "Nejdřív klikni 'Načti hráče (live data)'.")
             return
 
         try:
@@ -165,7 +208,7 @@ class App(tk.Tk):
             return
 
         self.result_var.set(
-            f"Turnaj: {t.name} ({t.tour.upper()}, {t.surface})\n"
+            f"Profil: {t.name} ({t.tour.upper()}, {t.surface})\n"
             f"{p1}: {a_aces} es  | interval 80%: {a_ci[0]} - {a_ci[1]}\n"
             f"{p2}: {b_aces} es  | interval 80%: {b_ci[0]} - {b_ci[1]}"
         )

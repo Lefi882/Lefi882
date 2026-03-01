@@ -207,14 +207,16 @@ Postup:
 1. vyber turnaj,
 2. klikni **Načti hráče pro turnaj**,
 3. vyber hráče A a B,
-4. klikni **VYPOČTI ESA**.
+4. filtruj hráče přes pole Filtr A/B (rychlé hledání),
+5. klikni **VYPOČTI ESA**.
 
 Výstup obsahuje i interval nejistoty (80 %).
 
 Model nově silněji váží **H2H matchup** (recency-weighted), takže výrazné vzájemné rozdíly v esech mají větší dopad na predikci.
 
 
-Nově appka při načtení hráčů cílí na **top 200** pool (podle recent zápasové aktivity + výkonnosti) z načtených ATP/WTA dat.
+Nově appka při načtení hráčů cílí na **top 200 aktivních hráčů** (filtruje dlouhodobě neaktivní jména).
+Při načtení také ukáže datum posledních dat + stáří v dnech, aby bylo vidět, jak čerstvá data model používá.
 Pokud nejde internet, spadne to na lokální sample data (pak uvidíš méně hráčů).
 
 

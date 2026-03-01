@@ -32,7 +32,12 @@ def load_rows(tour: str, years: List[int], csv_files: Optional[List[str]] = None
             rows.extend(read_local_matches(f))
         return rows
 
-    for y in years:
+    normalized_years = sorted(set(years))
+    current_year = datetime.utcnow().year
+    if current_year not in normalized_years:
+        normalized_years.append(current_year)
+
+    for y in normalized_years:
         rows.extend(fetch_year_matches(tour, y))
 
     # fallback to bundled samples
@@ -191,6 +196,30 @@ def estimate_aces_for_match(
 
 
 
+def latest_data_date(rows: List[Dict[str, str]]) -> datetime | None:
+    dates = []
+    for r in rows:
+        d = _parse_tourney_date(r.get("tourney_date", ""))
+        if d:
+            dates.append(d)
+    return max(dates) if dates else None
+
+
+def is_active_player(rows: List[Dict[str, str]], player: str, max_inactive_days: int = 420) -> bool:
+    newest = latest_data_date(rows)
+    if not newest:
+        return True
+    last = None
+    for r in rows:
+        if r.get("winner_name") == player or r.get("loser_name") == player:
+            d = _parse_tourney_date(r.get("tourney_date", ""))
+            if d and (last is None or d > last):
+                last = d
+    if not last:
+        return False
+    return (newest - last).days <= max_inactive_days
+
+
 def ranked_player_pool(rows: List[Dict[str, str]], tour: str, limit: int = 200) -> List[str]:
     """Build a practical top-player pool from loaded match data.
 
@@ -211,6 +240,8 @@ def ranked_player_pool(rows: List[Dict[str, str]], tour: str, limit: int = 200) 
 
     scored = []
     for name, d in stats.items():
+        if not is_active_player(rows, name):
+            continue
         matches = d["m"]
         wins = d["w"]
         win_rate = wins / matches if matches else 0.0
@@ -219,3 +250,12 @@ def ranked_player_pool(rows: List[Dict[str, str]], tour: str, limit: int = 200) 
 
     scored.sort(reverse=True)
     return [n for _, n in scored[:limit]]
+
+
+def search_players(players: List[str], query: str, limit: int = 40) -> List[str]:
+    q = (query or "").strip().lower()
+    if not q:
+        return players[:limit]
+    starts = [p for p in players if p.lower().startswith(q)]
+    contains = [p for p in players if q in p.lower() and p not in starts]
+    return (starts + contains)[:limit]
