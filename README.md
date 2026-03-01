@@ -173,9 +173,10 @@ Spusť soubor `SPUSTIT_ESA.bat` (dvojklik) **ve stejné složce jako Python soub
 
 BAT teď funguje nezávisle na cestě (nepotřebuje pevnou adresu `C:\...`):
 - automaticky se přepne do složky, kde leží `.bat`,
-- zkontroluje, že tam je `tournament_ace_app.py`,
-- zeptá se, jestli chceš WTA nebo ATP,
-- spustí výpočet a na konci vždy čeká na klávesu (okno se hned nezavře).
+- zkontroluje, že tam je `final_ace_app.py`,
+- spustí klikací GUI appku,
+- po dokončení nechá konzoli otevřenou (okno se hned nezavře),
+- umí fallback z `py` na `python`, když py launcher na Windows chybí.
 
 
 ## LIVE režim přes API (bez ručního výběru hráčů)
@@ -197,7 +198,6 @@ Pozn.: potřebuješ API klíč (`API_TENNIS_KEY` nebo `--api-key`).
 ## FINAL ACE APP (klikací GUI)
 
 Tohle je finální jednoduchá appka (klikací) s vylepšeným tmavým vzhledem a přehlednější kartou výsledku:
-Tohle je finální jednoduchá appka (klikací):
 
 ```bash
 python3 final_ace_app.py
@@ -211,11 +211,11 @@ Postup:
 
 Výstup obsahuje i interval nejistoty (80 %).
 
+Model nově silněji váží **H2H matchup** (recency-weighted), takže výrazné vzájemné rozdíly v esech mají větší dopad na predikci.
+
 
 Nově appka při načtení hráčů cílí na **top 200** pool (podle recent zápasové aktivity + výkonnosti) z načtených ATP/WTA dat.
 Pokud nejde internet, spadne to na lokální sample data (pak uvidíš méně hráčů).
 
 
-Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.
-Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.
 Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.

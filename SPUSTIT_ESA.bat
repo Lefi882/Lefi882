@@ -2,63 +2,59 @@
 setlocal
 chcp 65001 >nul
 
-echo ======================================
-echo  FINAL ACE APP - LEFI882
- echo ======================================
-chcp 65001 >nul
+REM Relaunch in persistent console so the window never closes immediately.
+if /I not "%~1"=="--hold" (
+  start "FINAL ACE APP" cmd /k ""%~f0" --hold"
+  exit /b
+)
+
+title FINAL ACE APP - LEFI882
+
+set "SCRIPT_DIR=%~dp0"
+cd /d "%SCRIPT_DIR%"
 
 echo ======================================
-echo  ODHAD ES - LEFI882 (WTA/ATP)
+echo  FINAL ACE APP - LEFI882
 echo ======================================
 echo.
 
-echo Kontroluji Python...
-py --version >nul 2>&1
+echo [1/3] Kontroluji Python launcher (py)...
+where py >nul 2>&1
 if errorlevel 1 (
-  echo [CHYBA] Python (py launcher) neni nainstalovany.
-  echo Nainstaluj Python z https://www.python.org/downloads/
-  goto :END
+  echo [INFO] py launcher neni dostupny, zkousim python...
+  where python >nul 2>&1
+  if errorlevel 1 (
+    echo [CHYBA] Neni dostupny ani 'py' ani 'python'.
+    echo Nainstaluj Python z https://www.python.org/downloads/
+    goto :END
+  )
+  set "PY_CMD=python"
+) else (
+  set "PY_CMD=py"
 )
 
-pushd "%~dp0" >nul 2>&1
-if errorlevel 1 (
-  echo [CHYBA] Nepodarilo se prejit do slozky skriptu.
-  goto :END
-)
-
+echo [2/3] Kontroluji soubory...
 if not exist "final_ace_app.py" (
   echo [CHYBA] Nenasel jsem final_ace_app.py ve slozce:
   echo %CD%
   goto :END
 )
 
-echo Spoustim klikaci appku...
-py final_ace_app.py
+echo [3/3] Spoustim klikaci appku...
+%PY_CMD% final_ace_app.py
+set "EXIT_CODE=%ERRORLEVEL%"
+
+if not "%EXIT_CODE%"=="0" (
+  echo.
+  echo [CHYBA] Aplikace skoncila s kodem %EXIT_CODE%.
+  echo Pokud se okno appky neotevre, posli prosim screenshot teto chyby.
+) else (
+  echo.
+  echo [OK] Aplikace byla ukoncena korektne.
+)
 
 :END
 echo.
-echo Hotovo. Zmackni libovolnou klavesu pro zavreni.
+echo Hotovo. Toto okno zustane otevrene. Zmackni libovolnou klavesu pro zavreni.
 pause >nul
 endlocal
-  echo [CHYBA] Python (py launcher) neni nainstalovany nebo neni v PATH.
-  echo Nainstaluj Python z https://www.python.org/downloads/
-  pause
-  exit /b 1
-)
-
-echo 1) WTA (Merida / Guadalajara)
-echo 2) ATP (Dubai / Acapulco / Los Cabos ...)
-set /p MODE=Vyber 1 nebo 2 a stiskni Enter: 
-
-echo.
-cd /d "C:\Users\David\Desktop\Lefi882-main"
-
-if "%MODE%"=="1" (
-  py tournament_ace_app.py --csv-files sample_wta_matches.csv
-) else (
-  py tournament_ace_app.py --csv-files sample_atp_matches.csv
-)
-
-echo.
-echo Hotovo.
-pause
