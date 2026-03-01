@@ -8,12 +8,6 @@ from tkinter import messagebox, ttk
 from typing import Dict, List
 
 from ace_engine import estimate_aces_for_match, load_rows, ranked_player_pool
-from tkinter import ttk, messagebox
-from dataclasses import dataclass
-from typing import Dict, List
-
-from ace_engine import load_rows, estimate_aces_for_match, ranked_player_pool
-from ace_engine import load_rows, estimate_aces_for_match
 
 
 @dataclass(frozen=True)
@@ -25,19 +19,12 @@ class TournamentProfile:
 
 
 TOURNAMENTS = [
-    TournamentProfile("Mérida Open Akron", "wta", "Hard", 1.03),
-    TournamentProfile("Guadalajara Open", "wta", "Hard", 1.04),
-    TournamentProfile("Dubai", "atp", "Hard", 1.08),
-    TournamentProfile("Acapulco (Abierto Mexicano)", "atp", "Hard", 1.06),
-    TournamentProfile("Los Cabos", "atp", "Hard", 1.05),
-    TournamentProfile("Indian Wells", "atp", "Hard", 0.98),
-    TournamentProfile("Miami Open", "atp", "Hard", 1.01),
-    TournamentProfile("Madrid", "atp", "Clay", 0.90),
-    TournamentProfile("Rome", "atp", "Clay", 0.86),
-    TournamentProfile("Roland Garros", "atp", "Clay", 0.84),
-    TournamentProfile("Wimbledon", "atp", "Grass", 1.18),
-    TournamentProfile("US Open", "atp", "Hard", 1.02),
+    TournamentProfile("ATP Hard (obecný)", "atp", "Hard", 1.02),
+    TournamentProfile("ATP Clay / Antuka (obecný)", "atp", "Clay", 0.88),
+    TournamentProfile("WTA Hard (obecný)", "wta", "Hard", 1.00),
+    TournamentProfile("WTA Clay / Antuka (obecný)", "wta", "Clay", 0.90),
 ]
+
 
 
 class App(tk.Tk):
@@ -49,7 +36,6 @@ class App(tk.Tk):
         self.configure(bg="#0f172a")
 
         self._init_style()
-        self.geometry("760x520")
 
         self.rows_by_tour: Dict[str, List[Dict[str, str]]] = {}
 
@@ -127,26 +113,6 @@ class App(tk.Tk):
         )
 
         ttk.Label(root, textvariable=self.status_var, style="Status.TLabel").pack(anchor="w", pady=(8, 0))
-        ttk.Label(self, text="Turnaj:").pack(anchor="w", padx=12, pady=(12, 2))
-        self.tournament_box = ttk.Combobox(self, textvariable=self.tournament_var, values=[t.name for t in TOURNAMENTS], state="readonly")
-        self.tournament_box.pack(fill="x", padx=12)
-
-        ttk.Button(self, text="1) Načti hráče pro turnaj", command=self.load_players).pack(fill="x", padx=12, pady=8)
-
-        self.players_list: List[str] = []
-        self.player_a_box = ttk.Combobox(self, textvariable=self.player_a_var, values=self.players_list)
-        self.player_b_box = ttk.Combobox(self, textvariable=self.player_b_var, values=self.players_list)
-
-        ttk.Label(self, text="Hráč A:").pack(anchor="w", padx=12)
-        self.player_a_box.pack(fill="x", padx=12)
-        ttk.Label(self, text="Hráč B:").pack(anchor="w", padx=12, pady=(8, 0))
-        self.player_b_box.pack(fill="x", padx=12)
-
-        ttk.Button(self, text="2) VYPOČTI ESA", command=self.compute).pack(fill="x", padx=12, pady=12)
-
-        ttk.Label(self, text="Výsledek:").pack(anchor="w", padx=12)
-        ttk.Label(self, textvariable=self.result_var, justify="left", wraplength=720).pack(anchor="w", padx=12, pady=8)
-        ttk.Label(self, textvariable=self.status_var).pack(anchor="w", padx=12, pady=(16, 0))
 
     def selected_tournament(self) -> TournamentProfile:
         for t in TOURNAMENTS:
@@ -160,7 +126,6 @@ class App(tk.Tk):
         self.update_idletasks()
 
         if t.tour not in self.rows_by_tour:
-            # Primary mode: fetch broad recent history to get a rich player pool.
             rows = load_rows(t.tour, years=[2022, 2023, 2024, 2025, 2026], csv_files=[])
             self.rows_by_tour[t.tour] = rows
 
@@ -168,14 +133,6 @@ class App(tk.Tk):
         names = ranked_player_pool(rows, t.tour, limit=200)
         if len(names) < 20:
             self.status_var.set("Pozn.: běží fallback data (málo hráčů). Zkus internet pro top 200.")
-            # likely offline / blocked fetch => sample fallback already used by engine
-            self.status_var.set("Pozn.: běží fallback data (málo hráčů). Zkus internet pro top 200.")
-            csv_files = ["sample_wta_matches.csv"] if t.tour == "wta" else ["sample_atp_matches.csv"]
-            rows = load_rows(t.tour, years=[2023, 2024, 2025, 2026], csv_files=csv_files)
-            self.rows_by_tour[t.tour] = rows
-
-        rows = self.rows_by_tour[t.tour]
-        names = sorted({r.get("winner_name") for r in rows if r.get("winner_name")} | {r.get("loser_name") for r in rows if r.get("loser_name")})
         self.players_list = names
         self.player_a_box["values"] = names
         self.player_b_box["values"] = names
@@ -184,7 +141,6 @@ class App(tk.Tk):
             self.player_a_var.set(names[0])
             self.player_b_var.set(names[1])
         self.status_var.set(f"Načteno {len(names)} hráčů (cíleno na top 200).")
-        self.status_var.set(f"Načteno {len(names)} hráčů.")
 
     def compute(self) -> None:
         t = self.selected_tournament()

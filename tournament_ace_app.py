@@ -27,16 +27,12 @@ class TournamentProfile:
 
 
 TOURNAMENTS: Dict[str, TournamentProfile] = {
-    "dubai": TournamentProfile("Dubai", "atp", "Hard", 1.08),
-    "acapulco": TournamentProfile("Acapulco (Abierto Mexicano)", "atp", "Hard", 1.06),
-    "los cabos": TournamentProfile("Los Cabos", "atp", "Hard", 1.05),
-    "merida": TournamentProfile("Mérida Open Akron", "wta", "Hard", 1.03),
-    "guadalajara": TournamentProfile("Guadalajara Open", "wta", "Hard", 1.04),
-    "wimbledon": TournamentProfile("Wimbledon", "atp", "Grass", 1.16),
-    "roland garros": TournamentProfile("Roland Garros", "atp", "Clay", 0.86),
-    "us open": TournamentProfile("US Open", "atp", "Hard", 1.02),
-    "australian open": TournamentProfile("Australian Open", "atp", "Hard", 1.03),
+    "atp hard": TournamentProfile("ATP Hard (obecný)", "atp", "Hard", 1.02),
+    "atp antuka": TournamentProfile("ATP Clay / Antuka (obecný)", "atp", "Clay", 0.88),
+    "wta hard": TournamentProfile("WTA Hard (obecný)", "wta", "Hard", 1.00),
+    "wta antuka": TournamentProfile("WTA Clay / Antuka (obecný)", "wta", "Clay", 0.90),
 }
+
 
 FALLBACK_SAMPLES = {
     "atp": "sample_atp_matches.csv",

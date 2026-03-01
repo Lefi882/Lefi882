@@ -6,6 +6,7 @@ Focuses on reusable data loading + model calculations so both CLI and GUI can us
 from __future__ import annotations
 
 import statistics
+from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -79,6 +80,13 @@ def _wmean(values: List[float], weights: List[float]) -> float:
     return sum(v * w for v, w in zip(values, weights)) if values else 0.0
 
 
+def _parse_tourney_date(value: str) -> datetime | None:
+    try:
+        return datetime.strptime(value, "%Y%m%d")
+    except Exception:
+        return None
+
+
 def build_rich_profile(player: str, rows: List[Dict[str, str]], surface: str, recent_n: int = 40) -> RichAceProfile:
     matches = _player_matches(rows, player, surface)
     if len(matches) < 6:
@@ -125,12 +133,31 @@ def h2h_adjustment(rows: List[Dict[str, str]], p1: str, p2: str, surface: str, m
         return 0.0
 
     deltas = []
-    for r in h2h:
+    weights = []
+    newest_date = _parse_tourney_date(h2h[0].get("tourney_date", ""))
+    for i, r in enumerate(h2h):
         p1_is_w = r.get("winner_name") == p1
         p1_ace = safe_float(r.get("w_ace") if p1_is_w else r.get("l_ace"))
         p2_ace = safe_float(r.get("l_ace") if p1_is_w else r.get("w_ace"))
         deltas.append((p1_ace - p2_ace) / 20.0)  # scaled
-    return max(-0.12, min(0.12, statistics.mean(deltas)))
+
+        d = _parse_tourney_date(r.get("tourney_date", ""))
+        if newest_date and d:
+            months = max(0.0, (newest_date - d).days / 30.0)
+            recency_w = 0.94 ** months
+        else:
+            recency_w = 0.9 ** i
+        weights.append(recency_w)
+
+    if not weights or sum(weights) <= 0:
+        raw = statistics.mean(deltas)
+    else:
+        raw = sum(v * w for v, w in zip(deltas, weights)) / sum(weights)
+
+    # If we have strong and consistent H2H gap, allow slightly larger impact.
+    consistency = abs(raw)
+    cap = 0.18 if consistency >= 0.25 else 0.12
+    return max(-cap, min(cap, raw))
 
 
 def estimate_aces_for_match(
@@ -147,8 +174,11 @@ def estimate_aces_for_match(
     h2h_ba = -h2h_ab
     sf = tournament_surface_multiplier(surface, tournament_boost)
 
-    rate_a = 0.72 * a.ace_rate_weighted + 0.28 * b.ace_allowed_weighted + h2h_ab * 0.15
-    rate_b = 0.72 * b.ace_rate_weighted + 0.28 * a.ace_allowed_weighted + h2h_ba * 0.15
+    rate_a = 0.70 * a.ace_rate_weighted + 0.30 * b.ace_allowed_weighted + h2h_ab * 0.35
+    rate_b = 0.70 * b.ace_rate_weighted + 0.30 * a.ace_allowed_weighted + h2h_ba * 0.35
+
+    rate_a = max(0.01, min(0.45, rate_a))
+    rate_b = max(0.01, min(0.45, rate_b))
 
     a_aces = max(0.0, rate_a * a.service_points_avg * sf)
     b_aces = max(0.0, rate_b * b.service_points_avg * sf)
