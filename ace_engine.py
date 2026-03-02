@@ -26,13 +26,31 @@ class RichAceProfile:
     aces_median: float
 
 
+@dataclass(frozen=True)
+class DataLoadMeta:
+    source: str  # csv | remote_or_cache | sample_fallback
+    latest_date: datetime | None
+    age_days: int | None
+
+
 def load_rows(tour: str, years: List[int], csv_files: Optional[List[str]] = None) -> List[Dict[str, str]]:
+    rows, _ = load_rows_with_meta(tour=tour, years=years, csv_files=csv_files)
+    return rows
+
+
+def load_rows_with_meta(
+    tour: str,
+    years: List[int],
+    csv_files: Optional[List[str]] = None,
+) -> Tuple[List[Dict[str, str]], DataLoadMeta]:
     rows: List[Dict[str, str]] = []
     csv_files = csv_files or []
     if csv_files:
         for f in csv_files:
             rows.extend(read_local_matches(f))
-        return rows
+        latest = latest_data_date(rows)
+        age_days = (datetime.utcnow() - latest).days if latest else None
+        return rows, DataLoadMeta(source="csv", latest_date=latest, age_days=age_days)
 
     normalized_years = sorted(set(years))
     current_year = datetime.utcnow().year
@@ -42,12 +60,18 @@ def load_rows(tour: str, years: List[int], csv_files: Optional[List[str]] = None
     for y in normalized_years:
         rows.extend(fetch_year_matches(tour, y))
 
+    source = "remote_or_cache"
+
     # fallback to bundled samples
     if not rows:
         fallback = Path("sample_wta_matches.csv" if tour == "wta" else "sample_atp_matches.csv")
         if fallback.exists():
             rows.extend(read_local_matches(str(fallback)))
-    return rows
+            source = "sample_fallback"
+
+    latest = latest_data_date(rows)
+    age_days = (datetime.utcnow() - latest).days if latest else None
+    return rows, DataLoadMeta(source=source, latest_date=latest, age_days=age_days)
 
 
 def _player_matches(rows: Iterable[Dict[str, str]], player: str, surface: Optional[str]) -> List[Dict[str, str]]:

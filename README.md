@@ -233,3 +233,33 @@ python3 ace_scenario_tests.py --csv-files sample_atp_matches.csv
 
 Skript vypíše predikce vs. skutečnost pro předdefinované scénáře (včetně Hanfmann vs Darderi benchmarku, pokud jsou data dostupná) a spočítá MAE.
 
+
+
+## Production režim (fresh-data safeguard)
+
+`final_ace_app.py` nově blokuje predikce, pokud jsou data:
+- starší než 3 dny, nebo
+- načtená jen ze sample fallbacku.
+
+Status řádek zobrazuje i zdroj dat (`remote/cache`, `csv`, `sample fallback`) a stáří posledního zápasu.
+
+## Scrape TennisRatio (ATP/WTA)
+
+Pro stažení aktuálních ATP/WTA analytických tabulek z TennisRatio:
+
+```bash
+python3 tennisratio_scraper.py --tour both --out-dir data/tennisratio
+```
+
+Nebo zvlášť:
+
+```bash
+python3 tennisratio_scraper.py --tour atp
+python3 tennisratio_scraper.py --tour wta
+```
+
+Skript čte:
+- https://www.tennisratio.com/analysis-atp.html
+- https://www.tennisratio.com/analysis-wta.html
+
+a ukládá CSV soubory pro další zpracování.

@@ -9,9 +9,10 @@ from tkinter import messagebox, ttk
 from typing import Dict, List
 
 from ace_engine import (
+    DataLoadMeta,
     estimate_aces_for_match,
-    latest_data_date,
     load_rows,
+    load_rows_with_meta,
     ranked_player_pool,
     search_players,
     suggested_lines,
@@ -56,6 +57,7 @@ class App(tk.Tk):
         self.result_var = tk.StringVar(value="Vyber profil, načti hráče a klikni VYPOČTI ESA.")
 
         self.players_list: List[str] = []
+        self.current_meta: DataLoadMeta | None = None
 
         self._build_ui()
 
@@ -159,7 +161,8 @@ class App(tk.Tk):
         self.update_idletasks()
 
         # always reload to get fresh data (cache in fetch has 24h freshness)
-        rows = load_rows(t.tour, years=[2023, 2024, 2025, 2026], csv_files=[])
+        rows, meta = load_rows_with_meta(t.tour, years=[2023, 2024, 2025, 2026], csv_files=[])
+        self.current_meta = meta
         self.rows_by_tour[t.tour] = rows
 
         names = ranked_player_pool(rows, t.tour, limit=200)
@@ -171,17 +174,24 @@ class App(tk.Tk):
             self.player_a_var.set(names[0])
             self.player_b_var.set(names[1])
 
-        newest = latest_data_date(rows)
-        if newest:
-            age_days = max(0, (datetime.utcnow() - newest).days)
-            fresh_info = f"Poslední zápas v datech: {newest.strftime('%Y-%m-%d')} (stáří {age_days} dnů)"
-            if age_days > 2:
-                fresh_info += " ⚠️"
+        if meta.latest_date:
+            age_days = max(0, meta.age_days or 0)
+            fresh_info = f"Poslední zápas v datech: {meta.latest_date.strftime('%Y-%m-%d')} (stáří {age_days} dnů)"
         else:
+            age_days = 9999
             fresh_info = "Poslední zápas v datech: neznámé"
 
-        if len(names) < 20:
-            self.status_var.set(f"Načteno {len(names)} hráčů (fallback). {fresh_info}")
+        if meta.source == "sample_fallback":
+            fresh_info += " | ZDROJ: sample fallback ⚠️"
+        elif meta.source == "remote_or_cache":
+            fresh_info += " | ZDROJ: remote/cache"
+        else:
+            fresh_info += " | ZDROJ: csv"
+
+        if age_days > 3 or meta.source == "sample_fallback":
+            self.status_var.set(f"⛔ Data příliš stará pro production predikci. {fresh_info}")
+        elif len(names) < 20:
+            self.status_var.set(f"Načteno {len(names)} hráčů (nízký vzorek). {fresh_info}")
         else:
             self.status_var.set(f"Načteno {len(names)} aktivních hráčů. {fresh_info}")
 
@@ -201,6 +211,14 @@ class App(tk.Tk):
         rows = self.rows_by_tour.get(t.tour)
         if not rows:
             messagebox.showerror("Chyba", "Nejdřív klikni 'Načti hráče (live data)'.")
+            return
+
+        if self.current_meta and (self.current_meta.source == "sample_fallback" or (self.current_meta.age_days is not None and self.current_meta.age_days > 3)):
+            messagebox.showerror(
+                "Production safeguard",
+                "Data jsou příliš stará nebo jen ze sample fallbacku.\n"
+                "Predikce je zablokovaná. Nejprve obnov live data.",
+            )
             return
 
         try:
