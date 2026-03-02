@@ -235,14 +235,14 @@ Skript vypíše predikce vs. skutečnost pro předdefinované scénáře (včetn
 
 
 
-## Production režim (fresh-data safeguard)
+## Final app režim (TennisRatio live API)
 
-`final_ace_app.py` má přepínač **Production strict mode**:
-- když je zapnutý, blokuje predikce pokud jsou data starší než 3 dny nebo načtená ze sample fallbacku,
-- když je vypnutý (default), predikci dovolí po varování, aby šla appka používat i offline.
+`final_ace_app.py` je přepnutý na přímý zdroj dat z TennisRatio API:
+- načte ATP/WTA hráče z `/api/h2h-players/`,
+- pro vybrané hráče stáhne live statistiky z `/api/player/<slug>/stats-filtered/` podle povrchu Hard/Clay/Grass,
+- odhad es počítá přímo z těchto live statistik (bez závislosti na starých CSV datech).
 
-Status řádek zobrazuje zdroj dat (`remote/cache`, `csv`, `sample fallback`) i stáří posledního zápasu.
-
+Pokud API dočasně nejde, appka ukáže chybu načtení API místo "stará data" hlášek.
 
 ## TennisRatio public API (bez API klíče)
 

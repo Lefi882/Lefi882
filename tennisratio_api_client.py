@@ -1,10 +1,4 @@
-"""Public TennisRatio API helper (no API key required).
-
-Examples:
-  python3 tennisratio_api_client.py --search "Sinner" --tour atp
-  python3 tennisratio_api_client.py --player "Jannik Sinner" --tour atp --surface all
-  python3 tennisratio_api_client.py --slug JannikSinner --surface hard --format json
-"""
+"""Public TennisRatio API helper (no API key required)."""
 
 from __future__ import annotations
 
@@ -68,7 +62,11 @@ def search_players(query: str, tour: str = "both", limit: int = 20) -> List[Play
 
 
 def resolve_slug(player_name: str, tour: str = "both") -> str:
+<<<<<<< codex/develop-sports-probability-estimation-algorithm-sspm5y
+    matches = search_players(player_name, tour=tour, limit=8)
+=======
     matches = search_players(player_name, tour=tour, limit=5)
+>>>>>>> main
     exact = [p for p in matches if p.name.lower() == player_name.strip().lower()]
     if exact:
         return exact[0].slugname
@@ -101,16 +99,41 @@ def fetch_player_stats(slug: str, surface: str = "all", range_key: str = "52w", 
     }
 
 
+<<<<<<< codex/develop-sports-probability-estimation-algorithm-sspm5y
+def metric_value(payload: Dict[str, Any], key: str, default: float = 0.0) -> float:
+    stats = payload.get("stats_filtered", {}).get("stats", {})
+    raw = stats.get(key)
+    if isinstance(raw, dict):
+        raw = raw.get("value", raw.get("percentage", default))
+    try:
+        return float(raw)
+    except Exception:
+        return default
+
+
+def write_flat_csv(payload: Dict[str, Any], out_path: Path) -> None:
+    stats = payload.get("stats_filtered", {}).get("stats", {})
+    rows: List[Dict[str, Any]] = []
+    if isinstance(stats, dict):
+        for k, v in stats.items():
+            if isinstance(v, dict):
+                v = v.get("value", v.get("percentage"))
+=======
 def write_flat_csv(payload: Dict[str, Any], out_path: Path) -> None:
     stats = payload.get("stats_filtered", {})
     rows: List[Dict[str, Any]] = []
     if isinstance(stats, dict):
         for k, v in stats.items():
+>>>>>>> main
             if isinstance(v, (str, int, float, bool)) or v is None:
                 rows.append({"metric": k, "value": v})
 
     if not rows:
+<<<<<<< codex/develop-sports-probability-estimation-algorithm-sspm5y
+        raise RuntimeError("No metrics found in stats_filtered.stats payload")
+=======
         raise RuntimeError("No flat scalar metrics found in stats_filtered JSON payload")
+>>>>>>> main
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w", newline="", encoding="utf-8") as f:

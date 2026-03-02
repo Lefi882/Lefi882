@@ -1,22 +1,13 @@
-"""Final GUI app: choose profile + players and click compute aces."""
+"""Final GUI app powered by TennisRatio live API data."""
 
 from __future__ import annotations
 
 import tkinter as tk
 from dataclasses import dataclass
-from datetime import datetime
 from tkinter import messagebox, ttk
 from typing import Dict, List
 
-from ace_engine import (
-    DataLoadMeta,
-    estimate_aces_for_match,
-    load_rows_with_meta,
-    ranked_player_pool,
-    search_players,
-    suggested_lines,
-    over_under_probabilities,
-)
+from tennisratio_api_client import PlayerRef, fetch_h2h_players, fetch_player_stats, metric_value
 
 
 @dataclass(frozen=True)
@@ -28,36 +19,35 @@ class TournamentProfile:
 
 
 TOURNAMENTS = [
-    TournamentProfile("ATP Hard (obecný)", "atp", "Hard", 1.02),
-    TournamentProfile("ATP Clay / Antuka (obecný)", "atp", "Clay", 0.88),
-    TournamentProfile("WTA Hard (obecný)", "wta", "Hard", 1.00),
-    TournamentProfile("WTA Clay / Antuka (obecný)", "wta", "Clay", 0.90),
+    TournamentProfile("ATP Hard", "atp", "hard", 1.02),
+    TournamentProfile("ATP Clay", "atp", "clay", 0.92),
+    TournamentProfile("ATP Grass", "atp", "grass", 1.12),
+    TournamentProfile("WTA Hard", "wta", "hard", 1.00),
+    TournamentProfile("WTA Clay", "wta", "clay", 0.90),
+    TournamentProfile("WTA Grass", "wta", "grass", 1.06),
 ]
 
 
 class App(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title("FINAL ACE APP")
-        self.geometry("900x580")
-        self.minsize(860, 540)
+        self.title("FINAL ACE APP (TennisRatio API)")
+        self.geometry("940x620")
+        self.minsize(900, 580)
         self.configure(bg="#0f172a")
 
         self._init_style()
-
-        self.rows_by_tour: Dict[str, List[Dict[str, str]]] = {}
 
         self.tournament_var = tk.StringVar(value=TOURNAMENTS[0].name)
         self.player_a_var = tk.StringVar()
         self.player_b_var = tk.StringVar()
         self.player_a_filter_var = tk.StringVar()
         self.player_b_filter_var = tk.StringVar()
-        self.strict_mode_var = tk.BooleanVar(value=False)
         self.status_var = tk.StringVar(value="Ready")
-        self.result_var = tk.StringVar(value="Vyber profil, načti hráče a klikni VYPOČTI ESA.")
+        self.result_var = tk.StringVar(value="Vyber profil, načti hráče z TennisRatio API a klikni VYPOČTI ESA.")
 
         self.players_list: List[str] = []
-        self.current_meta: DataLoadMeta | None = None
+        self.player_refs_by_name: Dict[str, PlayerRef] = {}
 
         self._build_ui()
 
@@ -82,7 +72,7 @@ class App(tk.Tk):
         root.pack(fill="both", expand=True)
 
         ttk.Label(root, text="🎾 Final Ace App", style="Title.TLabel").pack(anchor="w")
-        ttk.Label(root, text="Live-ish data + filtr hráčů + odhad počtu es", style="Sub.TLabel").pack(anchor="w", pady=(0, 12))
+        ttk.Label(root, text="Data přímo z TennisRatio API (bez lokálních stale CSV)", style="Sub.TLabel").pack(anchor="w", pady=(0, 12))
 
         card = ttk.Frame(root, style="Card.TFrame", padding=14)
         card.pack(fill="x")
@@ -98,41 +88,34 @@ class App(tk.Tk):
         )
         self.tournament_box.grid(row=1, column=0, columnspan=2, sticky="ew", padx=(0, 4))
 
-        self.load_btn = ttk.Button(card, text="1) Načti hráče (live data)", command=self.load_players, style="Accent.TButton")
+        self.load_btn = ttk.Button(card, text="1) Načti hráče (TennisRatio API)", command=self.load_players, style="Accent.TButton")
         self.load_btn.grid(row=2, column=0, columnspan=2, sticky="ew", pady=10)
 
-        strict_check = ttk.Checkbutton(
-            card,
-            text="Production strict mode (blokovat stará/fallback data)",
-            variable=self.strict_mode_var,
-        )
-        strict_check.grid(row=3, column=0, columnspan=2, sticky="w", pady=(0, 8))
-
-        ttk.Label(card, text="Filtr hráče A", style="Field.TLabel").grid(row=4, column=0, sticky="w", padx=(0, 8))
-        ttk.Label(card, text="Filtr hráče B", style="Field.TLabel").grid(row=4, column=1, sticky="w")
+        ttk.Label(card, text="Filtr hráče A", style="Field.TLabel").grid(row=3, column=0, sticky="w", padx=(0, 8))
+        ttk.Label(card, text="Filtr hráče B", style="Field.TLabel").grid(row=3, column=1, sticky="w")
 
         self.player_a_filter = ttk.Entry(card, textvariable=self.player_a_filter_var)
         self.player_b_filter = ttk.Entry(card, textvariable=self.player_b_filter_var)
-        self.player_a_filter.grid(row=5, column=0, sticky="ew", padx=(0, 8), pady=(2, 6))
-        self.player_b_filter.grid(row=5, column=1, sticky="ew", pady=(2, 6))
+        self.player_a_filter.grid(row=4, column=0, sticky="ew", padx=(0, 8), pady=(2, 6))
+        self.player_b_filter.grid(row=4, column=1, sticky="ew", pady=(2, 6))
 
-        ttk.Label(card, text="Hráč A", style="Field.TLabel").grid(row=6, column=0, sticky="w", padx=(0, 8))
-        ttk.Label(card, text="Hráč B", style="Field.TLabel").grid(row=6, column=1, sticky="w")
+        ttk.Label(card, text="Hráč A", style="Field.TLabel").grid(row=5, column=0, sticky="w", padx=(0, 8))
+        ttk.Label(card, text="Hráč B", style="Field.TLabel").grid(row=5, column=1, sticky="w")
 
         self.player_a_box = ttk.Combobox(card, textvariable=self.player_a_var, values=self.players_list, state="readonly")
         self.player_b_box = ttk.Combobox(card, textvariable=self.player_b_var, values=self.players_list, state="readonly")
-        self.player_a_box.grid(row=7, column=0, sticky="ew", padx=(0, 8), pady=(2, 6))
-        self.player_b_box.grid(row=7, column=1, sticky="ew", pady=(2, 6))
+        self.player_a_box.grid(row=6, column=0, sticky="ew", padx=(0, 8), pady=(2, 6))
+        self.player_b_box.grid(row=6, column=1, sticky="ew", pady=(2, 6))
 
         self.compute_btn = ttk.Button(card, text="2) VYPOČTI ESA", command=self.compute, style="Accent.TButton")
-        self.compute_btn.grid(row=8, column=0, columnspan=2, sticky="ew", pady=(8, 4))
+        self.compute_btn.grid(row=7, column=0, columnspan=2, sticky="ew", pady=(8, 4))
 
         result_card = ttk.Frame(root, style="Card.TFrame", padding=14)
         result_card.pack(fill="both", expand=True, pady=(12, 0))
         result_card.columnconfigure(0, weight=1)
 
         ttk.Label(result_card, text="Výsledek", style="Field.TLabel").grid(row=0, column=0, sticky="w")
-        ttk.Label(result_card, textvariable=self.result_var, justify="left", style="Result.TLabel", wraplength=820).grid(
+        ttk.Label(result_card, textvariable=self.result_var, justify="left", style="Result.TLabel", wraplength=860).grid(
             row=1,
             column=0,
             sticky="nw",
@@ -147,8 +130,10 @@ class App(tk.Tk):
     def _apply_filters(self) -> None:
         if not self.players_list:
             return
-        a_items = search_players(self.players_list, self.player_a_filter_var.get(), limit=60)
-        b_items = search_players(self.players_list, self.player_b_filter_var.get(), limit=60)
+        a_query = self.player_a_filter_var.get().strip().lower()
+        b_query = self.player_b_filter_var.get().strip().lower()
+        a_items = [n for n in self.players_list if a_query in n.lower()][:80]
+        b_items = [n for n in self.players_list if b_query in n.lower()][:80]
         self.player_a_box["values"] = a_items
         self.player_b_box["values"] = b_items
         if a_items and self.player_a_var.get() not in a_items:
@@ -164,53 +149,51 @@ class App(tk.Tk):
 
     def load_players(self) -> None:
         t = self.selected_tournament()
-        self.status_var.set(f"Načítám data pro {t.name} ({t.tour.upper()})...")
+        self.status_var.set(f"Načítám TennisRatio index hráčů ({t.tour.upper()})...")
         self.update_idletasks()
+        try:
+            players = fetch_h2h_players()
+        except Exception as e:
+            messagebox.showerror("Chyba API", f"Nepodařilo se načíst hráče z TennisRatio API.\n{e}")
+            self.status_var.set("Chyba načítání TennisRatio API")
+            return
 
-        # always reload to get fresh data (cache in fetch has 24h freshness)
-        rows, meta = load_rows_with_meta(t.tour, years=[2023, 2024, 2025, 2026], csv_files=[])
-        self.current_meta = meta
-        self.rows_by_tour[t.tour] = rows
+        filtered = [p for p in players if p.category.lower() == t.tour]
+        filtered.sort(key=lambda p: (p.rank is None, p.rank if p.rank is not None else 10**9, p.name))
 
-        names = ranked_player_pool(rows, t.tour, limit=200)
-        self.players_list = names
-        self.player_a_box["values"] = names
-        self.player_b_box["values"] = names
+        self.players_list = [p.name for p in filtered]
+        self.player_refs_by_name = {p.name: p for p in filtered}
 
-        if len(names) >= 2:
-            self.player_a_var.set(names[0])
-            self.player_b_var.set(names[1])
+        self.player_a_box["values"] = self.players_list
+        self.player_b_box["values"] = self.players_list
 
-        if meta.latest_date:
-            age_days = max(0, meta.age_days or 0)
-            fresh_info = f"Poslední zápas v datech: {meta.latest_date.strftime('%Y-%m-%d')} (stáří {age_days} dnů)"
-        else:
-            age_days = 9999
-            fresh_info = "Poslední zápas v datech: neznámé"
-
-        if meta.source == "sample_fallback":
-            fresh_info += " | ZDROJ: sample fallback ⚠️"
-        elif meta.source == "remote_or_cache":
-            fresh_info += " | ZDROJ: remote/cache"
-        else:
-            fresh_info += " | ZDROJ: csv"
-
-        if age_days > 3 or meta.source == "sample_fallback":
-            if self.strict_mode_var.get():
-                self.status_var.set(f"⛔ Strict mode: predikce bude blokována. {fresh_info}")
-            else:
-                self.status_var.set(f"⚠️ Data jsou stará/fallback. Predikce je povolená na vlastní riziko. {fresh_info}")
-        elif len(names) < 20:
-            self.status_var.set(f"Načteno {len(names)} hráčů (nízký vzorek). {fresh_info}")
-        else:
-            self.status_var.set(f"Načteno {len(names)} aktivních hráčů. {fresh_info}")
+        if len(self.players_list) >= 2:
+            self.player_a_var.set(self.players_list[0])
+            self.player_b_var.set(self.players_list[1])
 
         self._apply_filters()
+        self.status_var.set(f"Načteno {len(self.players_list)} hráčů z TennisRatio API ({t.tour.upper()}).")
+
+    def _estimate_aces(self, own_stats: Dict, opp_stats: Dict, boost: float) -> float:
+        own_aces = metric_value(own_stats, "aces_per_match", 3.0)
+        own_sg = metric_value(own_stats, "service_games_won_ratio", 80.0)
+
+        opp_ret = metric_value(opp_stats, "return_games_won_ratio", 20.0)
+        opp_ret2 = metric_value(opp_stats, "return_2nd_serve_points", 45.0)
+
+        defense_factor = 1.08 - ((opp_ret / 100.0) * 0.35 + (opp_ret2 / 100.0) * 0.25)
+        defense_factor = max(0.70, min(1.20, defense_factor))
+
+        service_factor = max(0.85, min(1.15, own_sg / 85.0))
+
+        pred = own_aces * defense_factor * service_factor * boost
+        return round(max(0.5, pred), 1)
 
     def compute(self) -> None:
         t = self.selected_tournament()
         p1 = self.player_a_var.get().strip()
         p2 = self.player_b_var.get().strip()
+
         if not p1 or not p2:
             messagebox.showerror("Chyba", "Nejdřív načti hráče a vyber oba hráče.")
             return
@@ -218,59 +201,38 @@ class App(tk.Tk):
             messagebox.showerror("Chyba", "Hráč A a B musí být různí.")
             return
 
-        rows = self.rows_by_tour.get(t.tour)
-        if not rows:
-            messagebox.showerror("Chyba", "Nejdřív klikni 'Načti hráče (live data)'.")
+        ref1 = self.player_refs_by_name.get(p1)
+        ref2 = self.player_refs_by_name.get(p2)
+        if not ref1 or not ref2:
+            messagebox.showerror("Chyba", "Hráče nebylo možné mapovat na TennisRatio slug. Zkus načíst hráče znovu.")
             return
 
-        stale_or_fallback = self.current_meta and (
-            self.current_meta.source == "sample_fallback"
-            or (self.current_meta.age_days is not None and self.current_meta.age_days > 3)
-        )
-        if stale_or_fallback and self.strict_mode_var.get():
-            messagebox.showerror(
-                "Production safeguard",
-                "Data jsou příliš stará nebo jen ze sample fallbacku.\n"
-                "Predikce je zablokovaná, protože je zapnutý strict mode.",
-            )
-            return
-        if stale_or_fallback and not self.strict_mode_var.get():
-            proceed = messagebox.askyesno(
-                "Upozornění na kvalitu dat",
-                "Data jsou stará nebo fallback.\n"
-                "Predikce může být méně přesná. Pokračovat?",
-            )
-            if not proceed:
-                return
+        self.status_var.set(f"Načítám live stats: {p1} vs {p2} ({t.surface.upper()})...")
+        self.update_idletasks()
 
         try:
-            a_aces, b_aces, a_ci, b_ci = estimate_aces_for_match(rows, p1, p2, t.surface, t.boost)
+            s1 = fetch_player_stats(ref1.slugname, surface=t.surface)
+            s2 = fetch_player_stats(ref2.slugname, surface=t.surface)
         except Exception as e:
-            messagebox.showerror("Chyba výpočtu", str(e))
+            messagebox.showerror("Chyba API", f"Nepodařilo se načíst live stats z TennisRatio API.\n{e}")
+            self.status_var.set("Chyba načítání live stats")
             return
 
-        lines_a = suggested_lines(a_aces, count=3)
-        lines_b = suggested_lines(b_aces, count=3)
-        probs_a = over_under_probabilities(a_aces, lines_a)
-        probs_b = over_under_probabilities(b_aces, lines_b)
+        a_aces = self._estimate_aces(s1, s2, boost=t.boost)
+        b_aces = self._estimate_aces(s2, s1, boost=t.boost)
 
-        a_ou = "\n".join(
-            f"  O/U {line:.1f}: Over {probs_a[line][0]*100:.1f}% | Under {probs_a[line][1]*100:.1f}%"
-            for line in lines_a
-        )
-        b_ou = "\n".join(
-            f"  O/U {line:.1f}: Over {probs_b[line][0]*100:.1f}% | Under {probs_b[line][1]*100:.1f}%"
-            for line in lines_b
-        )
+        a_base = metric_value(s1, "aces_per_match", 0.0)
+        b_base = metric_value(s2, "aces_per_match", 0.0)
 
         self.result_var.set(
-            f"Profil: {t.name} ({t.tour.upper()}, {t.surface})\n"
-            f"{p1}: {a_aces} es  | interval 80%: {a_ci[0]} - {a_ci[1]}\n"
-            f"{p2}: {b_aces} es  | interval 80%: {b_ci[0]} - {b_ci[1]}\n\n"
-            f"{p1} line probabilities:\n{a_ou}\n\n"
-            f"{p2} line probabilities:\n{b_ou}"
+            f"Profil: {t.name} (surface={t.surface})\n"
+            f"Zdroj: TennisRatio API /stats-filtered\n\n"
+            f"{p1}: odhad {a_aces} es (base aces/match: {a_base:.2f})\n"
+            f"{p2}: odhad {b_aces} es (base aces/match: {b_base:.2f})\n\n"
+            f"Pozn.: výpočet je přímo z live TennisRatio player statistik\n"
+            f"(aces_per_match + return/service matchup + surface boost)."
         )
-        self.status_var.set("Výpočet hotov.")
+        self.status_var.set("Výpočet hotov (live TennisRatio data).")
 
 
 if __name__ == "__main__":
