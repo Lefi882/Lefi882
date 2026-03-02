@@ -243,6 +243,20 @@ Skript vypíše predikce vs. skutečnost pro předdefinované scénáře (včetn
 
 Status řádek zobrazuje zdroj dat (`remote/cache`, `csv`, `sample fallback`) i stáří posledního zápasu.
 
+
+## TennisRatio public API (bez API klíče)
+
+`tennisratio_api_client.py` používá veřejné endpointy TennisRatio (např. `/api/h2h-players/` a `/api/player/<slug>/stats-filtered/`) bez potřeby vlastního API klíče.
+
+Příklady:
+
+```bash
+python3 tennisratio_api_client.py --search "Sinner" --tour atp
+python3 tennisratio_api_client.py --player "Jannik Sinner" --tour atp --surface hard --format json --out data/tennisratio_api/sinner_hard.json
+```
+
+Tohle je vhodné jako zdroj čerstvých player statistik (Hard/Clay/Grass/All), když nechceš spoléhat jen na starší match CSV.
+
 ## Scrape TennisRatio (ATP/WTA)
 
 Pro stažení aktuálních ATP/WTA analytických tabulek z TennisRatio:
