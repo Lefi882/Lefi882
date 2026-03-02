@@ -221,3 +221,15 @@ Pokud nejde internet, spadne to na lokální sample data (pak uvidíš méně hr
 
 
 Na Windows můžeš final GUI spustit i dvojklikem na `SPUSTIT_ESA.bat`.
+
+
+## Scénářové testy přesnosti (doporučeno)
+
+Pro rychlé ověření, jestli model není mimo na konkrétních matchup případech, spusť:
+
+```bash
+python3 ace_scenario_tests.py --csv-files sample_atp_matches.csv
+```
+
+Skript vypíše predikce vs. skutečnost pro předdefinované scénáře (včetně Hanfmann vs Darderi benchmarku, pokud jsou data dostupná) a spočítá MAE.
+

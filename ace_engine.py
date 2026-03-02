@@ -23,6 +23,7 @@ class RichAceProfile:
     service_points_avg: float
     aces_avg: float
     aces_std: float
+    aces_median: float
 
 
 def load_rows(tour: str, years: List[int], csv_files: Optional[List[str]] = None) -> List[Dict[str, str]]:
@@ -115,6 +116,7 @@ def build_rich_profile(player: str, rows: List[Dict[str, str]], surface: str, re
         service_points_avg=_wmean(svpt, w),
         aces_avg=_wmean(aces, w),
         aces_std=statistics.pstdev(aces) if len(aces) > 1 else 1.2,
+        aces_median=statistics.median(aces) if aces else 0.0,
     )
 
 
@@ -186,12 +188,18 @@ def estimate_aces_for_match(
     rate_a = max(0.01, min(0.45, rate_a))
     rate_b = max(0.01, min(0.45, rate_b))
 
-    a_aces = max(0.0, rate_a * a.service_points_avg * sf)
-    b_aces = max(0.0, rate_b * b.service_points_avg * sf)
+    a_model = max(0.0, rate_a * a.service_points_avg * sf)
+    b_model = max(0.0, rate_b * b.service_points_avg * sf)
 
-    # rough 80% intervals from historical variance
-    a_ci = (max(0.0, a_aces - 1.28 * max(0.8, a.aces_std)), a_aces + 1.28 * max(0.8, a.aces_std))
-    b_ci = (max(0.0, b_aces - 1.28 * max(0.8, b.aces_std)), b_aces + 1.28 * max(0.8, b.aces_std))
+    # Blend model output with historical ace level to reduce systematic under/over-shoots.
+    a_aces = max(0.0, 0.68 * a_model + 0.32 * a.aces_avg)
+    b_aces = max(0.0, 0.68 * b_model + 0.32 * b.aces_avg)
+
+    # rough 80% intervals from historical variance + model-vs-history disagreement
+    a_unc = max(0.8, a.aces_std, abs(a_model - a.aces_median) * 0.45)
+    b_unc = max(0.8, b.aces_std, abs(b_model - b.aces_median) * 0.45)
+    a_ci = (max(0.0, a_aces - 1.28 * a_unc), a_aces + 1.28 * a_unc)
+    b_ci = (max(0.0, b_aces - 1.28 * b_unc), b_aces + 1.28 * b_unc)
 
     return round(a_aces, 1), round(b_aces, 1), (round(a_ci[0], 1), round(a_ci[1], 1)), (round(b_ci[0], 1), round(b_ci[1], 1))
 
