@@ -237,11 +237,11 @@ Skript vypíše predikce vs. skutečnost pro předdefinované scénáře (včetn
 
 ## Production režim (fresh-data safeguard)
 
-`final_ace_app.py` nově blokuje predikce, pokud jsou data:
-- starší než 3 dny, nebo
-- načtená jen ze sample fallbacku.
+`final_ace_app.py` má přepínač **Production strict mode**:
+- když je zapnutý, blokuje predikce pokud jsou data starší než 3 dny nebo načtená ze sample fallbacku,
+- když je vypnutý (default), predikci dovolí po varování, aby šla appka používat i offline.
 
-Status řádek zobrazuje i zdroj dat (`remote/cache`, `csv`, `sample fallback`) a stáří posledního zápasu.
+Status řádek zobrazuje zdroj dat (`remote/cache`, `csv`, `sample fallback`) i stáří posledního zápasu.
 
 ## Scrape TennisRatio (ATP/WTA)
 

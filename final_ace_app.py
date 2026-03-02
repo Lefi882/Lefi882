@@ -11,7 +11,6 @@ from typing import Dict, List
 from ace_engine import (
     DataLoadMeta,
     estimate_aces_for_match,
-    load_rows,
     load_rows_with_meta,
     ranked_player_pool,
     search_players,
@@ -53,6 +52,7 @@ class App(tk.Tk):
         self.player_b_var = tk.StringVar()
         self.player_a_filter_var = tk.StringVar()
         self.player_b_filter_var = tk.StringVar()
+        self.strict_mode_var = tk.BooleanVar(value=False)
         self.status_var = tk.StringVar(value="Ready")
         self.result_var = tk.StringVar(value="Vyber profil, načti hráče a klikni VYPOČTI ESA.")
 
@@ -101,24 +101,31 @@ class App(tk.Tk):
         self.load_btn = ttk.Button(card, text="1) Načti hráče (live data)", command=self.load_players, style="Accent.TButton")
         self.load_btn.grid(row=2, column=0, columnspan=2, sticky="ew", pady=10)
 
-        ttk.Label(card, text="Filtr hráče A", style="Field.TLabel").grid(row=3, column=0, sticky="w", padx=(0, 8))
-        ttk.Label(card, text="Filtr hráče B", style="Field.TLabel").grid(row=3, column=1, sticky="w")
+        strict_check = ttk.Checkbutton(
+            card,
+            text="Production strict mode (blokovat stará/fallback data)",
+            variable=self.strict_mode_var,
+        )
+        strict_check.grid(row=3, column=0, columnspan=2, sticky="w", pady=(0, 8))
+
+        ttk.Label(card, text="Filtr hráče A", style="Field.TLabel").grid(row=4, column=0, sticky="w", padx=(0, 8))
+        ttk.Label(card, text="Filtr hráče B", style="Field.TLabel").grid(row=4, column=1, sticky="w")
 
         self.player_a_filter = ttk.Entry(card, textvariable=self.player_a_filter_var)
         self.player_b_filter = ttk.Entry(card, textvariable=self.player_b_filter_var)
-        self.player_a_filter.grid(row=4, column=0, sticky="ew", padx=(0, 8), pady=(2, 6))
-        self.player_b_filter.grid(row=4, column=1, sticky="ew", pady=(2, 6))
+        self.player_a_filter.grid(row=5, column=0, sticky="ew", padx=(0, 8), pady=(2, 6))
+        self.player_b_filter.grid(row=5, column=1, sticky="ew", pady=(2, 6))
 
-        ttk.Label(card, text="Hráč A", style="Field.TLabel").grid(row=5, column=0, sticky="w", padx=(0, 8))
-        ttk.Label(card, text="Hráč B", style="Field.TLabel").grid(row=5, column=1, sticky="w")
+        ttk.Label(card, text="Hráč A", style="Field.TLabel").grid(row=6, column=0, sticky="w", padx=(0, 8))
+        ttk.Label(card, text="Hráč B", style="Field.TLabel").grid(row=6, column=1, sticky="w")
 
         self.player_a_box = ttk.Combobox(card, textvariable=self.player_a_var, values=self.players_list, state="readonly")
         self.player_b_box = ttk.Combobox(card, textvariable=self.player_b_var, values=self.players_list, state="readonly")
-        self.player_a_box.grid(row=6, column=0, sticky="ew", padx=(0, 8), pady=(2, 6))
-        self.player_b_box.grid(row=6, column=1, sticky="ew", pady=(2, 6))
+        self.player_a_box.grid(row=7, column=0, sticky="ew", padx=(0, 8), pady=(2, 6))
+        self.player_b_box.grid(row=7, column=1, sticky="ew", pady=(2, 6))
 
         self.compute_btn = ttk.Button(card, text="2) VYPOČTI ESA", command=self.compute, style="Accent.TButton")
-        self.compute_btn.grid(row=7, column=0, columnspan=2, sticky="ew", pady=(8, 4))
+        self.compute_btn.grid(row=8, column=0, columnspan=2, sticky="ew", pady=(8, 4))
 
         result_card = ttk.Frame(root, style="Card.TFrame", padding=14)
         result_card.pack(fill="both", expand=True, pady=(12, 0))
@@ -189,7 +196,10 @@ class App(tk.Tk):
             fresh_info += " | ZDROJ: csv"
 
         if age_days > 3 or meta.source == "sample_fallback":
-            self.status_var.set(f"⛔ Data příliš stará pro production predikci. {fresh_info}")
+            if self.strict_mode_var.get():
+                self.status_var.set(f"⛔ Strict mode: predikce bude blokována. {fresh_info}")
+            else:
+                self.status_var.set(f"⚠️ Data jsou stará/fallback. Predikce je povolená na vlastní riziko. {fresh_info}")
         elif len(names) < 20:
             self.status_var.set(f"Načteno {len(names)} hráčů (nízký vzorek). {fresh_info}")
         else:
@@ -213,13 +223,25 @@ class App(tk.Tk):
             messagebox.showerror("Chyba", "Nejdřív klikni 'Načti hráče (live data)'.")
             return
 
-        if self.current_meta and (self.current_meta.source == "sample_fallback" or (self.current_meta.age_days is not None and self.current_meta.age_days > 3)):
+        stale_or_fallback = self.current_meta and (
+            self.current_meta.source == "sample_fallback"
+            or (self.current_meta.age_days is not None and self.current_meta.age_days > 3)
+        )
+        if stale_or_fallback and self.strict_mode_var.get():
             messagebox.showerror(
                 "Production safeguard",
                 "Data jsou příliš stará nebo jen ze sample fallbacku.\n"
-                "Predikce je zablokovaná. Nejprve obnov live data.",
+                "Predikce je zablokovaná, protože je zapnutý strict mode.",
             )
             return
+        if stale_or_fallback and not self.strict_mode_var.get():
+            proceed = messagebox.askyesno(
+                "Upozornění na kvalitu dat",
+                "Data jsou stará nebo fallback.\n"
+                "Predikce může být méně přesná. Pokračovat?",
+            )
+            if not proceed:
+                return
 
         try:
             a_aces, b_aces, a_ci, b_ci = estimate_aces_for_match(rows, p1, p2, t.surface, t.boost)
