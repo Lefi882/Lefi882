@@ -29,10 +29,17 @@ def build_steps(args: argparse.Namespace) -> list[list[str]]:
     tipsport_cmd = [node, "scripts/tipsport2.js"]
     if args.tipsport_sport:
         tipsport_cmd.extend(["--sport", str(args.tipsport_sport)])
+    if args.tipsport_details:
+        tipsport_cmd.append("--details")
+        if args.tipsport_details_limit and args.tipsport_details_limit > 0:
+            tipsport_cmd.extend(["--limit", str(args.tipsport_details_limit)])
     tipsport_cmd.append("--json")
     steps.append(tipsport_cmd)
 
-    betano_cmd = [node, "scripts/betano.js", "--json"]
+    betano_cmd = [node, "scripts/betano.js"]
+    if args.betano_all:
+        betano_cmd.append("--all")
+    betano_cmd.append("--json")
     steps.append(betano_cmd)
 
     value_cmd = [
@@ -48,6 +55,8 @@ def build_steps(args: argparse.Namespace) -> list[list[str]]:
         str(args.min_edge),
         "--top",
         str(args.top),
+        "--fallback-top",
+        str(args.fallback_top),
     ]
     steps.append(value_cmd)
 
@@ -64,12 +73,16 @@ def main() -> int:
     )
     parser.add_argument("--python", default=sys.executable or "python3", help="Python interpreter")
     parser.add_argument("--node", default="node", help="Node.js executable")
-    parser.add_argument("--tipsport-sport", default="16", help="Tipsport sport id (16=fotbal, 188=esport)")
+    parser.add_argument("--tipsport-sport", default="16", help="Tipsport sport id (16=fotbal, 188=esport, all=all configured)")
+    parser.add_argument("--tipsport-details", action="store_true", help="Fetch detailed match markets (cards/corners/etc.)")
+    parser.add_argument("--tipsport-details-limit", type=int, default=30, help="Max number of matches for detail fetch")
     parser.add_argument("--tipsport-json", default="tipsport_odds.json", help="Tipsport output JSON path")
     parser.add_argument("--betano-json", default="betano_odds.json", help="Betano output JSON path")
+    parser.add_argument("--betano-all", action="store_true", help="Disable Betano sport filter (include all available sports)")
     parser.add_argument("--target", choices=["tipsport", "betano"], default="tipsport")
     parser.add_argument("--min-edge", type=float, default=1.0)
     parser.add_argument("--top", type=int, default=20)
+    parser.add_argument("--fallback-top", type=int, default=10, help="When no value-bets, print strongest discrepancies")
     parser.add_argument("--run-snapshot", action="store_true", help="Run one `main.py` snapshot at end")
     parser.add_argument("--providers-file", default="providers.json")
     parser.add_argument("--dry-run", action="store_true", help="Only print commands")

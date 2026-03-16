@@ -9,9 +9,9 @@ echo ======================================
 after_python:
 where py >nul 2>nul
 if %errorlevel%==0 (
-  py -3 scripts\run_all.py
+  py -3 scripts\run_all.py --tipsport-sport all --tipsport-details --betano-all
 ) else (
-  python scripts\run_all.py
+  python scripts\run_all.py --tipsport-sport all --tipsport-details --betano-all
 )
 
 set EXIT_CODE=%errorlevel%

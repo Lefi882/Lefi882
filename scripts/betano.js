@@ -14,6 +14,13 @@ const CFG = {
   urls: [
     "https://www.betano.cz/sport/fotbal/",
   ],
+  allSportUrls: [
+    "https://www.betano.cz/sport/fotbal/",
+    "https://www.betano.cz/sport/tenis/",
+    "https://www.betano.cz/sport/basketbal/",
+    "https://www.betano.cz/sport/hokej/",
+    "https://www.betano.cz/sport/esports/",
+  ],
 };
 
 const C = {
@@ -193,7 +200,10 @@ function printMatches(matches) {
 
 async function run() {
   const args = process.argv.slice(2);
-  if (args.includes("--all")) CFG.sportFilter = null;
+  if (args.includes("--all") || args.includes("--all-sports")) {
+    CFG.sportFilter = null;
+    CFG.urls = [...CFG.allSportUrls];
+  }
   if (args.includes("--esports")) {
     CFG.sportFilter = null;
     CFG.urls = ["https://www.betano.cz/sport/esports/"];

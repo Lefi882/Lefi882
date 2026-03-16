@@ -9,12 +9,16 @@ Tento repozitář obsahuje MVP nástroj pro:
 
 ## Rychlý start (jak spustit)
 
+1. Nainstaluj Python závislosti (a případně Node + Playwright pro scrapers).
+2. Pro Windows bez CMD použij `START_HERE.bat` (dvojklik).
+3. Pro CLI použij `python3 scripts/run_all.py`.
+
 ## Spuštění bez psaní do CMD (BAT / EXE)
 
 Pokud nechceš psát příkazy ručně, stačí ve Windows spustit dvojklikem:
 
 - `START_HERE.bat` → rozcestník (výběr 1/2/3),
-- `start_pipeline.bat` → spustí celý scraper + value-bet pipeline,
+- `start_pipeline.bat` → spustí celý pipeline pro **all sports** + detailní Tipsport trhy (karty/rohy apod.),
 - `start_valuebet_demo.bat` → spustí konkrétní demo (Arsenal vs Chelsea),
 - `start_snapshot.bat` → udělá jeden snapshot přes `main.py`.
 
@@ -28,15 +32,6 @@ py -3 -m PyInstaller --onefile --name lefi_pipeline scripts\run_all.py
 ```
 
 Výsledný soubor bude v `dist\lefi_pipeline.exe`.
-
-1. Nainstaluj Python závislosti (a případně Node + Playwright pro scrapers).
-2. Spusť celý pipeline jedním příkazem:
-
-```bash
-python3 scripts/run_all.py
-```
-
-3. Výstupy najdeš v `tipsport_odds.json`, `betano_odds.json` a v konzoli uvidíš value-bet výpis.
 
 ## Nejjednodušší cesta stahování
 
@@ -183,6 +178,7 @@ Volitelně:
 
 ```bash
 python3 scripts/run_all.py --target betano --min-edge 1.5 --top 30
+python3 scripts/run_all.py --tipsport-sport all --tipsport-details --betano-all
 python3 scripts/run_all.py --run-snapshot
 ```
 

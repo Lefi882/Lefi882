@@ -13,6 +13,7 @@ const fs = require("fs");
 const CFG = {
   baseUrl: "https://www.tipsport.cz",
   sports: {
+    0: { name: "Všechny sporty", path: "" },
     16: { name: "Fotbal", path: "fotbal-16" },
     188: { name: "Esporty", path: "esporty-188" },
   },
@@ -37,6 +38,7 @@ const fmtTime = (iso) => {
 function parseOffer(data, sportName) {
   const matches = [];
   for (const sport of (data.offerSuperSports || [])) {
+    const sportLabel = sport?.name || sportName;
     for (const tab of (sport.tabs || [])) {
       for (const comp of (tab.offerCompetitionAnnuals || [])) {
         const league = comp.name || sportName;
@@ -60,7 +62,7 @@ function parseOffer(data, sportName) {
           }
           matches.push({
             id: m.id,
-            sport: sportName,
+            sport: sportLabel,
             home: String(m.participantHome || "?").trim(),
             away: String(m.participantVisiting || "?").trim(),
             league,
@@ -99,7 +101,8 @@ async function scrapeSport(context, name, path, cookieClicked) {
     }
   });
 
-  await page.goto(`${CFG.baseUrl}/kurzy/${path}`, {
+  const urlPath = path ? `/kurzy/${path}` : "/kurzy";
+  await page.goto(`${CFG.baseUrl}${urlPath}`, {
     waitUntil: "domcontentloaded", timeout: 20000,
   }).catch(() => {});
 
@@ -279,7 +282,7 @@ async function run() {
   const sIdx = args.indexOf("--sport");
   if (sIdx !== -1 && args[sIdx + 1]) {
     sportIds = args[sIdx + 1] === "all"
-      ? Object.keys(CFG.sports).map(Number)
+      ? [0]
       : args[sIdx + 1].split(",").map(Number);
   }
 
