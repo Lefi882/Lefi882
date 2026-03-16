@@ -14,13 +14,27 @@ if str(ROOT) not in sys.path:
 from odds.valuebets import ExportMatch, find_value_bets
 
 
-def parse_start_time(value: str | None):
-    if not value:
+def parse_start_time(value):
+    if value is None or value == "":
         return None
-    try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00").replace(".000", ""))
-    except ValueError:
-        return None
+
+    if isinstance(value, (int, float)):
+        # Betano exports often use unix milliseconds
+        ts = float(value)
+        if ts > 10_000_000_000:  # looks like milliseconds
+            ts /= 1000.0
+        try:
+            return datetime.fromtimestamp(ts)
+        except (OverflowError, OSError, ValueError):
+            return None
+
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00").replace(".000", ""))
+        except ValueError:
+            return None
+
+    return None
 
 
 def load_export(path: Path, bookmaker: str) -> list[ExportMatch]:
