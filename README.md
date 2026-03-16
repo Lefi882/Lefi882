@@ -109,3 +109,45 @@ node scripts/tipsport2.js --json
 
 > Pozn.: vyžaduje nainstalovaný `playwright` v Node.js prostředí.
 
+
+
+## Betano Playwright scraper (rychlý sběr)
+
+Přidal jsem samostatný skript `scripts/betano.js`, který zachytává:
+
+- overview endpointy (`/danae-webapi/api/live/overview/...`),
+- fallback detail endpointy (`/api/zapas-sance/...`),
+- mapování 1X2 (`1`, `0`, `2` -> `1`, `X`, `2`).
+
+Příklady:
+
+```bash
+node scripts/betano.js
+node scripts/betano.js --json
+```
+
+> Skript je zaměřený na rychlý praktický sběr (stejně jako Tipsport varianta) a vyžaduje nainstalovaný `playwright` v Node.js prostředí.
+
+
+
+## Value bet evaluátor (Tipsport vs Betano)
+
+Po nasbírání dat přes Playwright scrapers můžeš spustit jednoduchý vyhodnocovací systém VALUE betů:
+
+```bash
+python3 scripts/valuebets_tipsport_betano.py \
+  --tipsport tipsport_odds.json \
+  --betano betano_odds.json \
+  --target tipsport \
+  --min-edge 1.0
+```
+
+Co to dělá:
+
+- spáruje podobné zápasy mezi Tipsport a Betano,
+- z referenční sázkovky dopočítá „fair" pravděpodobnost 1X2 (normalizací marže),
+- spočítá edge (%) pro cílovou sázkovku,
+- vypíše nejlepší value kandidáty (event, outcome, ratio, edge).
+
+Tip: přepni `--target betano`, pokud chceš hledat value na Betanu vůči Tipsportu.
+
