@@ -1,0 +1,8 @@
+{
+  "providers": [
+    {"bookmaker": "Tipsport", "data_file": "data/tipsport_offer_v2.json", "format": "tipsport_offer_v2"},
+    {"bookmaker": "Fortuna", "data_file": "data/fortuna.json"},
+    {"bookmaker": "Allwyn", "data_file": "data/allwyn.json"},
+    {"bookmaker": "BetanoCZ", "data_file": "data/betanocz.json"}
+  ]
+}
