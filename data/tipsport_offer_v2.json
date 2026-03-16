@@ -1,0 +1,56 @@
+{
+  "offerSuperSports": [
+    {
+      "id": {"superSportId": 16},
+      "name": "Fotbal",
+      "tabs": [
+        {
+          "matchView": "WINNER_WHOLE_MATCH",
+          "name": "Zápas",
+          "offerCompetitionAnnuals": [
+            {
+              "id": 247410,
+              "competitionId": 3210,
+              "name": "Evropská liga, Fotbal - muži",
+              "matches": [
+                {
+                  "id": 7782219,
+                  "nameFull": "Plzeň - Panathinaikos (odv.)",
+                  "dateClosed": "2026-02-26T18:45:00.000+01:00",
+                  "participantHome": "Plzeň",
+                  "participantVisiting": "Panathinaikos",
+                  "race": false,
+                  "oppRows": [
+                    {
+                      "oppsTab": [
+                        {"type": "1", "odd": 2.06},
+                        {"type": "1x", "odd": 1.26},
+                        {"type": "x", "odd": 3.32},
+                        {"type": "x2", "odd": 1.73},
+                        {"type": "2", "odd": 3.57}
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": 7355718,
+                  "nameFull": "Evropská liga 2025/2026 - celkově",
+                  "dateClosed": "2026-02-26T18:45:00.000+01:00",
+                  "race": true,
+                  "oppRows": [
+                    {
+                      "oppsTab": [
+                        {"type": "1", "odd": 4.0},
+                        {"type": "1", "odd": 8.0}
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
