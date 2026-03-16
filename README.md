@@ -37,6 +37,8 @@ Ukázka (`providers.json`):
 
 ## Spuštění
 
+### Jak spustit snapshot
+
 Jednorázový snapshot:
 
 ```bash
@@ -98,6 +100,8 @@ Přidal jsem i samostatný skript `scripts/tipsport2.js`, který umí:
 - volitelně stáhnout detailní trhy každého zápasu (`--details`),
 - uložit výstup do JSON (`--json`).
 
+### Jak spustit Tipsport scraper
+
 Příklady:
 
 ```bash
@@ -119,6 +123,8 @@ Přidal jsem samostatný skript `scripts/betano.js`, který zachytává:
 - fallback detail endpointy (`/api/zapas-sance/...`),
 - mapování 1X2 (`1`, `0`, `2` -> `1`, `X`, `2`).
 
+### Jak spustit Betano scraper
+
 Příklady:
 
 ```bash
@@ -133,6 +139,8 @@ node scripts/betano.js --esports
 
 
 ## One-command automat (stáhnout + vyhodnotit)
+
+### Jak spustit celý pipeline
 
 Pokud chceš všechno spustit jedním příkazem (Tipsport + Betano scraping a následné value vyhodnocení), použij:
 
@@ -156,6 +164,8 @@ py scripts\run_all.py
 
 ## Value bet evaluátor (Tipsport vs Betano)
 
+### Jak spustit value-bet evaluátor
+
 Po nasbírání dat přes Playwright scrapers můžeš spustit jednoduchý vyhodnocovací systém VALUE betů:
 
 ```bash
@@ -176,4 +186,10 @@ Co to dělá:
 Tip: přepni `--target betano`, pokud chceš hledat value na Betanu vůči Tipsportu.
 
 Pozn.: pokud nic neprojde přes `--min-edge`, skript automaticky vypíše nejsilnější cenové rozdíly (`--fallback-top`).
+
+Pro rychlý test s **konkrétním zápasem** (Arsenal vs Chelsea) a garantovaným nálezem value-betu:
+
+```bash
+python3 scripts/valuebets_tipsport_betano.py --manual-demo --target tipsport --min-edge 1.0
+```
 

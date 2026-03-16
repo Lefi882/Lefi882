@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from datetime import datetime, timezone
 from datetime import datetime
 import sys
 
@@ -24,12 +25,17 @@ def parse_start_time(value):
         if ts > 10_000_000_000:  # looks like milliseconds
             ts /= 1000.0
         try:
+            return datetime.fromtimestamp(ts, tz=timezone.utc)
             return datetime.fromtimestamp(ts)
         except (OverflowError, OSError, ValueError):
             return None
 
     if isinstance(value, str):
         try:
+            dt = datetime.fromisoformat(value.replace("Z", "+00:00").replace(".000", ""))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt
             return datetime.fromisoformat(value.replace("Z", "+00:00").replace(".000", ""))
         except ValueError:
             return None
@@ -57,6 +63,18 @@ def load_export(path: Path, bookmaker: str) -> list[ExportMatch]:
     return out
 
 
+def manual_demo_data() -> tuple[list[ExportMatch], list[ExportMatch]]:
+    kickoff = datetime(2026, 3, 20, 20, 0, tzinfo=timezone.utc)
+    # Intentionally chosen odds to guarantee at least one positive edge.
+    tipsport = [
+        ExportMatch("Tipsport", "Arsenal", "Chelsea", kickoff, {"1": 2.35, "X": 3.50, "2": 3.60}),
+    ]
+    betano = [
+        ExportMatch("Betano", "Chelsea", "Arsenal", kickoff, {"1": 2.10, "X": 3.25, "2": 3.40}),
+    ]
+    return tipsport, betano
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Value bet evaluator: Tipsport vs Betano")
     parser.add_argument("--tipsport", default="tipsport_odds.json", help="Path to Tipsport export JSON")
@@ -65,6 +83,14 @@ def main() -> None:
     parser.add_argument("--min-edge", type=float, default=1.0, help="Minimum edge percent")
     parser.add_argument("--top", type=int, default=20, help="Maximum rows to print")
     parser.add_argument("--fallback-top", type=int, default=10, help="If no value-bets, print top discrepancies")
+    parser.add_argument("--manual-demo", action="store_true", help="Use built-in demo data with a guaranteed concrete value-bet")
+    args = parser.parse_args()
+
+    if args.manual_demo:
+        tipsport, betano = manual_demo_data()
+    else:
+        tipsport = load_export(Path(args.tipsport), "Tipsport")
+        betano = load_export(Path(args.betano), "Betano")
     args = parser.parse_args()
 
     tipsport = load_export(Path(args.tipsport), "Tipsport")
@@ -79,6 +105,8 @@ def main() -> None:
 
     print(f"Loaded: Tipsport={len(tipsport)} matches, Betano={len(betano)} matches")
     print(f"Target bookmaker: {args.target.title()} | min_edge={args.min_edge:.2f}%")
+    if args.manual_demo:
+        print("Mode: manual demo dataset (guaranteed at least one concrete value-bet)")
     print(f"Found value bets: {len(value_bets)}\n")
 
     rows = value_bets[: args.top]

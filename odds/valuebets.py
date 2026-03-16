@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from datetime import datetime
 from difflib import SequenceMatcher
 import re
@@ -50,6 +51,21 @@ def _event_similarity(a: ExportMatch, b: ExportMatch) -> float:
     return SequenceMatcher(None, _event_key(a), _event_key(b)).ratio()
 
 
+
+
+def _to_utc_timestamp(dt: datetime) -> float:
+    if dt.tzinfo is None:
+        # treat naive timestamps as UTC to avoid local-time dependent matching
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    return dt.timestamp()
+
+
+def _kickoff_score(a: ExportMatch, b: ExportMatch, tolerance_hours: float) -> float:
+    if not a.start_time or not b.start_time:
+        return 0.5
+    delta_hours = abs(_to_utc_timestamp(a.start_time) - _to_utc_timestamp(b.start_time)) / 3600.0
 def _kickoff_score(a: ExportMatch, b: ExportMatch, tolerance_hours: float) -> float:
     if not a.start_time or not b.start_time:
         return 0.5
@@ -62,6 +78,7 @@ def _kickoff_score(a: ExportMatch, b: ExportMatch, tolerance_hours: float) -> fl
 def _within_kickoff_tolerance(a: ExportMatch, b: ExportMatch, tolerance_hours: float) -> bool:
     if not a.start_time or not b.start_time:
         return True
+    delta_hours = abs(_to_utc_timestamp(a.start_time) - _to_utc_timestamp(b.start_time)) / 3600.0
     delta_hours = abs((a.start_time - b.start_time).total_seconds()) / 3600.0
     return delta_hours <= tolerance_hours
 

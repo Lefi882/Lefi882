@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from datetime import datetime
 
 from odds.valuebets import ExportMatch, find_best_edges, find_value_bets, match_events
@@ -27,6 +28,19 @@ def test_match_events_uses_kickoff_tolerance() -> None:
     pairs = match_events(target, reference, kickoff_tolerance_hours=24)
 
     assert len(pairs) == 0
+
+
+def test_match_events_handles_mixed_timezone_datetimes() -> None:
+    target = [
+        ExportMatch("Tipsport", "Arsenal", "Chelsea", datetime(2026, 2, 20, 18, 0), {"1": 2.2, "X": 3.4, "2": 3.1}),
+    ]
+    reference = [
+        ExportMatch("Betano", "Chelsea", "Arsenal", datetime(2026, 2, 20, 18, 0, tzinfo=timezone.utc), {"1": 2.0, "X": 3.2, "2": 3.5}),
+    ]
+
+    pairs = match_events(target, reference, kickoff_tolerance_hours=24)
+
+    assert len(pairs) == 1
 
 
 def test_find_value_bets_detects_positive_edge() -> None:
