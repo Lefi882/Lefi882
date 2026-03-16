@@ -124,6 +124,7 @@ Příklady:
 ```bash
 node scripts/betano.js
 node scripts/betano.js --json
+node scripts/betano.js --esports
 ```
 
 > Skript je zaměřený na rychlý praktický sběr (stejně jako Tipsport varianta) a vyžaduje nainstalovaný `playwright` v Node.js prostředí.
@@ -173,4 +174,6 @@ Co to dělá:
 - vypíše nejlepší value kandidáty (event, outcome, ratio, edge).
 
 Tip: přepni `--target betano`, pokud chceš hledat value na Betanu vůči Tipsportu.
+
+Pozn.: pokud nic neprojde přes `--min-edge`, skript automaticky vypíše nejsilnější cenové rozdíly (`--fallback-top`).
 

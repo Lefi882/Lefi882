@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from odds.valuebets import ExportMatch, find_value_bets
+from odds.valuebets import ExportMatch, find_best_edges, find_value_bets
 
 
 def parse_start_time(value):
@@ -64,6 +64,7 @@ def main() -> None:
     parser.add_argument("--target", choices=["tipsport", "betano"], default="tipsport", help="Bookmaker where we want to place value bets")
     parser.add_argument("--min-edge", type=float, default=1.0, help="Minimum edge percent")
     parser.add_argument("--top", type=int, default=20, help="Maximum rows to print")
+    parser.add_argument("--fallback-top", type=int, default=10, help="If no value-bets, print top discrepancies")
     args = parser.parse_args()
 
     tipsport = load_export(Path(args.tipsport), "Tipsport")
@@ -80,7 +81,16 @@ def main() -> None:
     print(f"Target bookmaker: {args.target.title()} | min_edge={args.min_edge:.2f}%")
     print(f"Found value bets: {len(value_bets)}\n")
 
-    for vb in value_bets[: args.top]:
+    rows = value_bets[: args.top]
+    if not rows and args.fallback_top > 0:
+        rows = find_best_edges(target, reference, top=args.fallback_top)
+        if rows:
+            print(
+                "No bets passed min-edge threshold; showing strongest discrepancies instead "
+                f"(top {len(rows)}).\n"
+            )
+
+    for vb in rows:
         ko = vb.kickoff.isoformat() if vb.kickoff else "?"
         print(
             f"[{vb.edge_percent:6.2f}%] {vb.event} | {vb.outcome} | "

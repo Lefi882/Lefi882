@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * BETANO SCRAPER
- *  node scripts/betano.js         → defaultně esports overview
+ *  node scripts/betano.js         → defaultně fotbal pre-match
  *  node scripts/betano.js --json  → uloží betano_odds.json
  */
 const { chromium } = require("playwright");
@@ -9,10 +9,10 @@ const fs = require("fs");
 
 const CFG = {
   baseUrl: "https://www.betano.cz",
-  sportFilter: null,
+  sportFilter: "FOOT",
   outputFile: "betano_odds.json",
   urls: [
-    "https://www.betano.cz/sport/esports/",
+    "https://www.betano.cz/sport/fotbal/",
   ],
 };
 
@@ -194,6 +194,10 @@ function printMatches(matches) {
 async function run() {
   const args = process.argv.slice(2);
   if (args.includes("--all")) CFG.sportFilter = null;
+  if (args.includes("--esports")) {
+    CFG.sportFilter = null;
+    CFG.urls = ["https://www.betano.cz/sport/esports/"];
+  }
 
   console.clear();
   console.log(`${C.bright}${C.cyan}\n  ╔══════════════════════════════════════════════╗\n  ║   BETANO SCRAPER  ·  Playwright              ║\n  ║   ${new Date().toLocaleTimeString("cs-CZ").padEnd(42)}║\n  ╚══════════════════════════════════════════════╝${C.reset}\n`);
