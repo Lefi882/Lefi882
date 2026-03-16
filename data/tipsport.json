@@ -1,0 +1,20 @@
+{
+  "events": [
+    {
+      "event_id": "ts-001",
+      "event_name": "Sparta Praha vs Slavia Praha",
+      "sport": "football",
+      "market": "1X2",
+      "kickoff": "2026-02-20T18:00:00",
+      "odds": {"1": 2.35, "X": 3.50, "2": 3.10}
+    },
+    {
+      "event_id": "ts-002",
+      "event_name": "Plzeň vs Baník Ostrava",
+      "sport": "football",
+      "market": "1X2",
+      "kickoff": "2026-02-21T16:00:00",
+      "odds": {"1": 1.95, "X": 3.65, "2": 4.00}
+    }
+  ]
+}
