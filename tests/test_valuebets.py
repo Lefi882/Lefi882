@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from datetime import datetime
 
 from odds.valuebets import ExportMatch, find_best_edges, find_value_bets, match_events
 
