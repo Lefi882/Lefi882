@@ -130,6 +130,29 @@ node scripts/betano.js --json
 
 
 
+
+## One-command automat (stáhnout + vyhodnotit)
+
+Pokud chceš všechno spustit jedním příkazem (Tipsport + Betano scraping a následné value vyhodnocení), použij:
+
+```bash
+python3 scripts/run_all.py
+```
+
+Volitelně:
+
+```bash
+python3 scripts/run_all.py --target betano --min-edge 1.5 --top 30
+python3 scripts/run_all.py --run-snapshot
+```
+
+Na Windows:
+
+```bat
+py scripts\run_all.py
+```
+
+
 ## Value bet evaluátor (Tipsport vs Betano)
 
 Po nasbírání dat přes Playwright scrapers můžeš spustit jednoduchý vyhodnocovací systém VALUE betů:
