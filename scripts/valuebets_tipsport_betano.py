@@ -5,6 +5,7 @@ import argparse
 import json
 from pathlib import Path
 from datetime import datetime, timezone
+from datetime import datetime
 import sys
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -25,6 +26,7 @@ def parse_start_time(value):
             ts /= 1000.0
         try:
             return datetime.fromtimestamp(ts, tz=timezone.utc)
+            return datetime.fromtimestamp(ts)
         except (OverflowError, OSError, ValueError):
             return None
 
@@ -34,6 +36,7 @@ def parse_start_time(value):
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=timezone.utc)
             return dt
+            return datetime.fromisoformat(value.replace("Z", "+00:00").replace(".000", ""))
         except ValueError:
             return None
 
@@ -88,6 +91,10 @@ def main() -> None:
     else:
         tipsport = load_export(Path(args.tipsport), "Tipsport")
         betano = load_export(Path(args.betano), "Betano")
+    args = parser.parse_args()
+
+    tipsport = load_export(Path(args.tipsport), "Tipsport")
+    betano = load_export(Path(args.betano), "Betano")
 
     if args.target == "tipsport":
         target, reference = tipsport, betano

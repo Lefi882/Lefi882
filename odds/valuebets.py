@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from datetime import datetime
 from difflib import SequenceMatcher
 import re
 import unicodedata
@@ -65,6 +66,10 @@ def _kickoff_score(a: ExportMatch, b: ExportMatch, tolerance_hours: float) -> fl
     if not a.start_time or not b.start_time:
         return 0.5
     delta_hours = abs(_to_utc_timestamp(a.start_time) - _to_utc_timestamp(b.start_time)) / 3600.0
+def _kickoff_score(a: ExportMatch, b: ExportMatch, tolerance_hours: float) -> float:
+    if not a.start_time or not b.start_time:
+        return 0.5
+    delta_hours = abs((a.start_time - b.start_time).total_seconds()) / 3600.0
     if delta_hours > tolerance_hours:
         return 0.0
     return max(0.0, 1.0 - (delta_hours / tolerance_hours))
@@ -74,6 +79,7 @@ def _within_kickoff_tolerance(a: ExportMatch, b: ExportMatch, tolerance_hours: f
     if not a.start_time or not b.start_time:
         return True
     delta_hours = abs(_to_utc_timestamp(a.start_time) - _to_utc_timestamp(b.start_time)) / 3600.0
+    delta_hours = abs((a.start_time - b.start_time).total_seconds()) / 3600.0
     return delta_hours <= tolerance_hours
 
 

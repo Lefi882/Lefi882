@@ -7,36 +7,6 @@ Tento repozitář obsahuje MVP nástroj pro:
 - porovnání nejlepších kurzů a detekci arbitráže,
 - periodický sběr snapshotů (typicky každých 60 sekund).
 
-## Rychlý start (jak spustit)
-
-## Spuštění bez psaní do CMD (BAT / EXE)
-
-Pokud nechceš psát příkazy ručně, stačí ve Windows spustit dvojklikem:
-
-- `start_pipeline.bat` → spustí celý scraper + value-bet pipeline,
-- `start_valuebet_demo.bat` → spustí konkrétní demo (Arsenal vs Chelsea),
-- `start_snapshot.bat` → udělá jeden snapshot přes `main.py`.
-
-### EXE varianta (volitelné)
-
-Ano, jde to i jako `.exe` pomocí PyInstalleru (zabalí Python skript do jednoho souboru):
-
-```bat
-py -3 -m pip install pyinstaller
-py -3 -m PyInstaller --onefile --name lefi_pipeline scripts\run_all.py
-```
-
-Výsledný soubor bude v `dist\lefi_pipeline.exe`.
-
-1. Nainstaluj Python závislosti (a případně Node + Playwright pro scrapers).
-2. Spusť celý pipeline jedním příkazem:
-
-```bash
-python3 scripts/run_all.py
-```
-
-3. Výstupy najdeš v `tipsport_odds.json`, `betano_odds.json` a v konzoli uvidíš value-bet výpis.
-
 ## Nejjednodušší cesta stahování
 
 Použij `providers.json` a u každé sázkovky vyplň:
