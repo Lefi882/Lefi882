@@ -220,3 +220,78 @@ Pro rychlý test s **konkrétním zápasem** (Arsenal vs Chelsea) a garantovaný
 python3 scripts/valuebets_tipsport_betano.py --manual-demo --target tipsport --min-edge 1.0
 ```
 
+
+
+## Hidden API scraper (Method 1: HTTP Requests)
+
+Pro školní zadání bez oficiálního API je v repu i čistě HTTP varianta:
+
+- skript: `scripts/hidden_api_scraper.py`
+- cíl: stáhnout interní JSON endpointy (XHR/Fetch) a převést je do formátu `events`, který už umí `main.py` a pipeline.
+
+### Rychlé použití pro Tipsport.cz
+
+```bash
+python3 scripts/hidden_api_scraper.py --tipsport --output data/tipsport_hidden_api.json
+```
+
+`--tipsport` automaticky použije endpoint `https://www.tipsport.cz/rest/offer/v2/offer?limit=200` a parser `tipsport_offer_v2`.
+
+### Obecné použití pro libovolný hidden endpoint
+
+```bash
+python3 scripts/hidden_api_scraper.py \
+  --bookmaker DemoBookie \
+  --format events \
+  --url "https://example.com/api/sports/events?sport=football" \
+  --url "https://example.com/v2/odds/upcoming?market=1x2" \
+  --min-delay 1.0 --max-delay 2.5 \
+  --output data/demo_hidden_api.json
+```
+
+Pak stačí přidat provider do `providers.json` jako standardní `events` feed:
+
+```json
+{
+  "bookmaker": "Tipsport",
+  "data_file": "data/tipsport_hidden_api.json",
+  "format": "events"
+}
+```
+
+Skript používá náhodné zpoždění mezi requesty (omezení blokace) a ukládá výstup rovnou v normalizovaném tvaru.
+
+## Jak oddělit nový PR od starých commitů (GitHub)
+
+Když ti GitHub do nového PR přidává "staré" změny, je to téměř vždy tím, že branch není založená čistě z `main`.
+
+### Rychlé řešení (doporučeno)
+
+Použij helper skript:
+
+```bash
+scripts/create_clean_pr_branch.sh codex/moje-nova-zmena HEAD
+```
+
+- vytvoří branch z `origin/main`,
+- vezme jen commit(y), které chceš (`HEAD` nebo konkrétní hash/range),
+- výsledný PR pak nebude obsahovat historické změny z jiné větve.
+
+Pak už jen:
+
+```bash
+git push -u origin codex/moje-nova-zmena
+```
+
+A na GitHubu nastav PR jako:
+
+- **base**: `main`
+- **compare**: `codex/moje-nova-zmena`
+
+### Když chceš přenést víc commitů
+
+```bash
+scripts/create_clean_pr_branch.sh codex/moje-nova-zmena a1b2c3d..d4e5f6g
+```
+
+Skript použije cherry-pick rozsahu commitů na čistý základ `origin/main`.
