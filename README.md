@@ -220,3 +220,34 @@ Pro rychlý test s **konkrétním zápasem** (Arsenal vs Chelsea) a garantovaný
 python3 scripts/valuebets_tipsport_betano.py --manual-demo --target tipsport --min-edge 1.0
 ```
 
+
+
+## Hidden API scraper (Method 1: HTTP Requests)
+
+Pro školní zadání bez oficiálního API je v repu i čistě HTTP varianta:
+
+- skript: `scripts/hidden_api_scraper.py`
+- cíl: stáhnout interní JSON endpointy (XHR/Fetch) a převést je do formátu `events`, který už umí `main.py` a pipeline.
+
+### Příklad použití
+
+```bash
+python3 scripts/hidden_api_scraper.py \
+  --bookmaker DemoBookie \
+  --url "https://example.com/api/sports/events?sport=football" \
+  --url "https://example.com/v2/odds/upcoming?market=1x2" \
+  --min-delay 1.0 --max-delay 2.5 \
+  --output data/demo_hidden_api.json
+```
+
+Pak stačí přidat provider do `providers.json` jako standardní `events` feed:
+
+```json
+{
+  "bookmaker": "DemoBookie",
+  "data_file": "data/demo_hidden_api.json",
+  "format": "events"
+}
+```
+
+Skript používá náhodné zpoždění mezi requesty (omezení blokace) a ukládá výstup rovnou v normalizovaném tvaru.
