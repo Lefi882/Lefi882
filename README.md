@@ -229,11 +229,20 @@ Pro školní zadání bez oficiálního API je v repu i čistě HTTP varianta:
 - skript: `scripts/hidden_api_scraper.py`
 - cíl: stáhnout interní JSON endpointy (XHR/Fetch) a převést je do formátu `events`, který už umí `main.py` a pipeline.
 
-### Příklad použití
+### Rychlé použití pro Tipsport.cz
+
+```bash
+python3 scripts/hidden_api_scraper.py --tipsport --output data/tipsport_hidden_api.json
+```
+
+`--tipsport` automaticky použije endpoint `https://www.tipsport.cz/rest/offer/v2/offer?limit=200` a parser `tipsport_offer_v2`.
+
+### Obecné použití pro libovolný hidden endpoint
 
 ```bash
 python3 scripts/hidden_api_scraper.py \
   --bookmaker DemoBookie \
+  --format events \
   --url "https://example.com/api/sports/events?sport=football" \
   --url "https://example.com/v2/odds/upcoming?market=1x2" \
   --min-delay 1.0 --max-delay 2.5 \
@@ -244,8 +253,8 @@ Pak stačí přidat provider do `providers.json` jako standardní `events` feed:
 
 ```json
 {
-  "bookmaker": "DemoBookie",
-  "data_file": "data/demo_hidden_api.json",
+  "bookmaker": "Tipsport",
+  "data_file": "data/tipsport_hidden_api.json",
   "format": "events"
 }
 ```
