@@ -1,0 +1,7 @@
+timestamp,market,taken_odds,close_odds,stake,pnl
+2026-03-01T13:05:00Z,ATP_next_game_winner,2.12,2.03,100,112
+2026-03-01T13:18:00Z,ATP_next_game_winner,1.85,1.91,100,-100
+2026-03-02T09:41:00Z,WTA_hold_break,2.45,2.32,80,116
+2026-03-02T10:07:00Z,WTA_hold_break,1.74,1.69,120,-120
+2026-03-03T15:52:00Z,ATP_aces_line_pre,1.98,1.90,150,147
+2026-03-04T11:09:00Z,ATP_aces_line_pre,2.20,2.35,90,-90
