@@ -220,6 +220,50 @@ Pro rychlý test s **konkrétním zápasem** (Arsenal vs Chelsea) a garantovaný
 python3 scripts/valuebets_tipsport_betano.py --manual-demo --target tipsport --min-edge 1.0
 ```
 
+## Edge Research Lab (tenisové hypotézy)
+
+Pro rychlé datové testování edge hypotéz je dostupný skript `edge_research_lab.py`.
+Pokrývá 3 směry:
+
+- **intransitivní matchupy** (`intransitivity-backtest`) – hledání A > B > C > A struktur a jejich vztah k upsetům,
+- **kalibrace modelu** (`calibration-report`) – metriky Brier score + ECE,
+- **CLV/ROI tracking** (`clv-report`) – průběžné měření closing line value a návratnosti.
+
+### 1) Intransitivity backtest
+
+Vstupní CSV by mělo obsahovat minimálně: `player_a,player_b,winner,odds_a,odds_b`.
+
+```bash
+python3 edge_research_lab.py intransitivity-backtest \
+  --matches sample_atp_matches.csv \
+  --min-h2h 2 \
+  --upset-odds-threshold 2.30
+```
+
+### 2) Calibration report
+
+Vstupní CSV musí mít pravděpodobnost a výsledek:
+
+- `pred_prob` (nebo `probability` / `p`) v rozsahu 0..1,
+- `outcome` (nebo `label` / `y`) jako 0/1.
+
+```bash
+python3 edge_research_lab.py calibration-report \
+  --predictions tvuj_predictions_dataset.csv \
+  --bins 10
+```
+
+### 3) CLV report
+
+Vstupní CSV formát:
+`timestamp,market,taken_odds,close_odds,stake,pnl`
+
+Ukázkový soubor je v repu: `sample_bets_clv.csv`.
+
+```bash
+python3 edge_research_lab.py clv-report --bets sample_bets_clv.csv
+```
+
 
 
 ## Hidden API scraper (Method 1: HTTP Requests)
