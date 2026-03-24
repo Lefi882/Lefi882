@@ -1,0 +1,6 @@
+timestamp,market,taken_odds,close_odds,stake,pnl
+2026-01-05 14:00,tennis_next_game,2.10,2.00,100,110
+2026-01-05 16:30,tennis_match_winner,1.90,1.95,100,-100
+2026-01-06 11:15,tennis_aces_over,1.85,1.78,150,127.5
+2026-01-06 19:40,tennis_aces_over,2.05,2.12,120,-120
+2026-01-07 09:10,tennis_next_game,1.75,1.68,200,150
